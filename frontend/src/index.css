@@ -42,9 +42,10 @@ body {
 .app-layer {
   position: relative;
   z-index: 1;
-  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ─── Glass Panel ─────────────────────────────────────────── */
@@ -179,3 +180,39 @@ select { appearance: none; -webkit-appearance: none; }
 .app-layer::-webkit-scrollbar { width: 4px; }
 .app-layer::-webkit-scrollbar-track { background: transparent; }
 .app-layer::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.25); border-radius: 2px; }
+
+/* ─── Custom scrollbar for reading panels ────────────────── */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 2px; }
+
+/* ─── Fade-in animation ──────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─── Float animation for subtle element movement ────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ─── Glow pulse for cards ───────────────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(212,175,55,0.1), 0 8px 32px rgba(0,0,0,0.35); }
+  50% { box-shadow: 0 0 25px rgba(212,175,55,0.2), 0 8px 32px rgba(0,0,0,0.35); }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+/* ─── Responsive typography helpers ──────────────────────── */
+@media (max-width: 380px) {
+  .app-layer { font-size: 14px; }
+}

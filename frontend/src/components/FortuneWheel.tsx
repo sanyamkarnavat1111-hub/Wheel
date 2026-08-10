@@ -49,7 +49,6 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
     controls.stop(); // Stop idle animation
 
     const extra       = Math.floor(Math.random() * NUM);
-    // ensure we add enough rotations (e.g. 8 full spins)
     const currentRotate = (rotation % 360);
     const newRotation = currentRotate + 360 * 8 + extra * SLICE;
     
@@ -75,20 +74,18 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
     });
   };
 
-  // SVG Dimension Definitions (Making it slightly more compact to fit well)
-  const SZ = 500; // viewBox dimensions
+  // SVG Dimension Definitions
+  const SZ = 500;
   const CX = 250;
   const CY = 250;
-  const R  = 235; // Outer wheel radius
-  const IR = 55;  // Inner hub radius
+  const R  = 235;
+  const IR = 55;
 
-  // Polar to Cartesian conversion helper (0 deg = Top)
   const polarToCartesian = (deg: number, radius: number) => {
     const rad = ((deg - 90) * Math.PI) / 180;
     return { x: CX + radius * Math.cos(rad), y: CY + radius * Math.sin(rad) };
   };
 
-  // SVG Pie Wedge Generator
   const arcPath = (startDeg: number, endDeg: number, outerR: number, innerR: number) => {
     const s1 = polarToCartesian(startDeg, outerR);
     const e1 = polarToCartesian(endDeg, outerR);
@@ -98,10 +95,14 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 select-none w-full h-full">
+    <div className="flex flex-col items-center justify-center select-none w-full h-full gap-2 sm:gap-3">
       {/* ── Precision Pointer Arrow ── */}
-      <div className="mb-[-20px] z-20 relative drop-shadow-[0_4px_12px_rgba(245,196,66,0.7)] animate-[pulse_3s_ease-in-out_infinite]">
-        <svg width="32" height="40" viewBox="0 0 28 34" fill="none">
+      <motion.div
+        animate={{ y: [0, -4, 0] }}
+        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+        className="mb-[-16px] sm:mb-[-20px] z-20 relative drop-shadow-[0_4px_12px_rgba(245,196,66,0.7)]"
+      >
+        <svg className="w-6 h-8 sm:w-8 sm:h-10" viewBox="0 0 28 34" fill="none">
           <path d="M14 34 L0 0 L28 0 Z" fill="url(#ptr-gold-grad)" stroke="#FFF" strokeWidth="1" />
           <defs>
             <linearGradient id="ptr-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -111,15 +112,15 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
             </linearGradient>
           </defs>
         </svg>
-      </div>
+      </motion.div>
 
       {/* ── Main Wheel Frame ── */}
-      <div className="relative w-full max-w-[85vw] lg:max-w-[60vh] 2xl:max-w-[550px] aspect-square">
+      <div className="relative w-[70vw] max-w-[280px] sm:w-[55vw] sm:max-w-[340px] md:max-w-[380px] lg:w-full lg:max-w-[420px] xl:max-w-[480px] 2xl:max-w-[520px] aspect-square">
         {/* Ambient Glow */}
         <motion.div 
           animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.5, 0.3] }}
           transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-          className="absolute -inset-4 rounded-full pointer-events-none"
+          className="absolute -inset-3 sm:-inset-4 rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(245,196,66,0.15) 0%, rgba(245,196,66,0) 70%)' }}
         />
 
@@ -129,7 +130,6 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
         >
           <svg viewBox={`0 0 ${SZ} ${SZ}`} className="w-full h-full block">
             <defs>
-              {/* Metallic Gold Ring Gradient */}
               <linearGradient id="gold-border" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFE066" />
                 <stop offset="30%" stopColor="#F5C442" />
@@ -137,14 +137,12 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
                 <stop offset="100%" stopColor="#FFE066" />
               </linearGradient>
               
-              {/* Center Hub Gradient */}
               <radialGradient id="center-hub-grad" cx="50%" cy="40%">
                 <stop offset="0%" stopColor="#2A1B4E" />
                 <stop offset="70%" stopColor="#120A27" />
                 <stop offset="100%" stopColor="#080414" />
               </radialGradient>
 
-              {/* Category Gradients */}
               {POINTS_SLICES.map((slice, i) => (
                 <radialGradient key={i} id={`slice-grad-${i}`} cx="50%" cy="30%" r="70%">
                   <stop offset="0%" stopColor={slice.color1} />
@@ -153,10 +151,8 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
               ))}
             </defs>
 
-            {/* Wheel Outer Background Shadow Base */}
             <circle cx={CX} cy={CY} r={R + 3} fill="#0A0618" stroke="url(#gold-border)" strokeWidth="5" />
 
-            {/* Slices & Elements */}
             {POINTS_SLICES.map((slice, i) => {
               const startDeg = i * SLICE;
               const endDeg   = startDeg + SLICE;
@@ -165,7 +161,6 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
 
               return (
                 <g key={i}>
-                  {/* Wedge Path */}
                   <path
                     d={arcPath(startDeg, endDeg, R, IR)}
                     fill={`url(#slice-grad-${i})`}
@@ -177,9 +172,7 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
                     }}
                   />
 
-                  {/* Oriented Group for Text along slice center */}
                   <g transform={`rotate(${midDeg}, ${CX}, ${CY})`}>
-                    {/* Radial Label Text (Points) */}
                     <text
                       x={CX}
                       y={CY - 142}
@@ -199,7 +192,6 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
               );
             })}
 
-            {/* Divider Spokes */}
             {POINTS_SLICES.map((_, i) => {
               const p1 = polarToCartesian(i * SLICE, IR);
               const p2 = polarToCartesian(i * SLICE, R);
@@ -215,14 +207,10 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
               );
             })}
 
-            {/* Inner Ring Border */}
             <circle cx={CX} cy={CY} r={IR} fill="none" stroke="url(#gold-border)" strokeWidth="3" />
-
-            {/* Center Metallic Hub */}
             <circle cx={CX} cy={CY} r={IR - 2} fill="url(#center-hub-grad)" />
             <circle cx={CX} cy={CY} r={IR - 8} fill="none" stroke="rgba(245,196,66,0.4)" strokeWidth="1.5" />
 
-            {/* Central Sacred Om Symbol */}
             <text
               x={CX}
               y={CY + 3}
@@ -244,9 +232,9 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
         {landedIdx !== null && !spinning && (
           <motion.div
             initial={{ opacity: 0, y: 15, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1    }}
-            exit={{    opacity: 0, y: 15              }}
-            className="bg-gradient-to-br from-[#1e103c]/95 to-[#0f0823]/95 backdrop-blur-md border border-[#F5C442]/50 rounded-full px-6 py-2.5 text-[#FFE066] font-['Cinzel'] font-extrabold text-lg tracking-wider shadow-[0_6px_24px_rgba(0,0,0,0.6),0_0_20px_rgba(245,196,66,0.3)] mt-2"
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15 }}
+            className="bg-gradient-to-br from-[#1e103c]/95 to-[#0f0823]/95 backdrop-blur-md border border-[#F5C442]/50 rounded-full px-4 sm:px-6 py-1.5 sm:py-2.5 text-[#FFE066] font-['Cinzel'] font-extrabold text-sm sm:text-lg tracking-wider shadow-[0_6px_24px_rgba(0,0,0,0.6),0_0_20px_rgba(245,196,66,0.3)]"
           >
             {t('points_earned', { points: POINTS_SLICES[landedIdx].points })}
           </motion.div>
@@ -259,10 +247,7 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
         whileTap={{ scale: 0.95 }}
         onClick={handleSpin}
         disabled={spinning}
-        className={`spin-btn rounded-full font-['Cinzel'] font-extrabold text-sm tracking-[0.15em] transition-all ${landedIdx !== null && !spinning ? 'mt-0' : 'mt-1'}`}
-        style={{
-          padding: '10px 40px',
-        }}
+        className="spin-btn rounded-full font-['Cinzel'] font-extrabold text-xs sm:text-sm tracking-[0.15em] transition-all px-8 sm:px-10 py-2.5 sm:py-3 mt-1 sm:mt-2"
       >
         {spinning ? t('spinning') : t('spin_now')}
       </motion.button>
