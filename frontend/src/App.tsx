@@ -1,21 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
 import './i18n';
 import CosmicCanvas from './components/CosmicCanvas';
 import OnboardingModal from './components/OnboardingModal';
 import FortuneWheel from './components/FortuneWheel';
-import GamificationPanel from './components/GamificationPanel';
+import KarmaPanel from './components/KarmaPanel';
 
 function App() {
   const { t, i18n } = useTranslation();
   const [userData, setUserData] = useState<{ name: string; dob: string; time: string; place: string } | null>(null);
   const [spinning, setSpinning] = useState(false);
-
-  // Gamification State
   const [karmaPoints, setKarmaPoints] = useState(0);
   const [loadingReading, setLoadingReading] = useState(false);
-  const [readingData, setReadingData] = useState<any | null>(null);
+  const [readingData, setReadingData] = useState<{ reading: string } | null>(null);
+
   const GOAL_THRESHOLD = 1000;
 
   useEffect(() => {
@@ -26,14 +24,13 @@ function App() {
   }, []);
 
   const handleSpinComplete = (points: number) => {
-    const newPoints = karmaPoints + points;
-    setKarmaPoints(newPoints);
-    localStorage.setItem('karma_points', newPoints.toString());
+    const next = karmaPoints + points;
+    setKarmaPoints(next);
+    localStorage.setItem('karma_points', next.toString());
   };
 
   const handleAskQuestion = async (question: string) => {
     if (karmaPoints < GOAL_THRESHOLD) return;
-
     setLoadingReading(true);
     setReadingData(null);
     try {
@@ -48,13 +45,11 @@ function App() {
         }),
       });
       setReadingData(await res.json());
-
-      const remainingPoints = Math.max(0, karmaPoints - GOAL_THRESHOLD);
-      setKarmaPoints(remainingPoints);
-      localStorage.setItem('karma_points', remainingPoints.toString());
-
+      const remaining = Math.max(0, karmaPoints - GOAL_THRESHOLD);
+      setKarmaPoints(remaining);
+      localStorage.setItem('karma_points', remaining.toString());
     } catch {
-      setReadingData({ reading: 'The cosmic energies are realigning. Ensure the backend is running and the GROQ API key is configured.', lucky_number: null, auspicious_date: null, lucky_color: null });
+      setReadingData({ reading: 'The cosmic energies are realigning. Ensure the backend is running and the GROQ API key is configured.' });
     } finally {
       setLoadingReading(false);
     }
@@ -65,106 +60,76 @@ function App() {
       <CosmicCanvas />
 
       {!userData && (
-        <OnboardingModal
-          onComplete={d => { setUserData(d); localStorage.setItem('kundli_user', JSON.stringify(d)); }}
-        />
+        <OnboardingModal onComplete={d => { setUserData(d); localStorage.setItem('kundli_user', JSON.stringify(d)); }} />
       )}
 
-      <div className="app-layer flex flex-col">
-        {/* ──────────────── HEADER ──────────────── */}
-        <motion.header
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="flex-shrink-0 relative z-30 flex items-center justify-between px-3 py-2.5 sm:px-4 sm:py-3 md:px-8 bg-[#060614]/80 backdrop-blur-md border-b border-[#D4AF37]/20"
-        >
-          <div className="flex items-center gap-2 sm:gap-3">
-            <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-['Cinzel'] font-extrabold text-xs sm:text-sm text-[#060614] shadow-[0_2px_12px_rgba(212,175,55,0.4)]"
-              style={{ background: 'linear-gradient(135deg,#f5c842,#b8862a)' }}
+      <div className="app-shell">
+        {/* ─── Header ─── */}
+        <header className="flex-shrink-0 flex items-center justify-between px-[var(--space-4)] sm:px-[var(--space-6)] lg:px-[var(--space-8)] py-[var(--space-3)] border-b border-[var(--color-border)] bg-[var(--color-bg)]/70 backdrop-blur-md">
+          <div className="flex items-center gap-[var(--space-2)] sm:gap-[var(--space-3)]">
+            <div
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-[var(--font-display)] font-bold text-[10px] sm:text-xs text-[var(--color-bg)] bg-gradient-to-br from-[var(--color-accent-bright)] to-[var(--color-accent)] shadow-[0_2px_8px_rgba(212,175,55,0.3)]"
+              aria-hidden="true"
             >
               YV
-            </motion.div>
-            <span className="hidden sm:inline font-['Cinzel'] text-base lg:text-lg font-bold text-[#e8e4f5]/90 tracking-wide">
-              {t('app_title')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 sm:gap-6">
-            {userData && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-right"
-              >
-                <p className="text-[#e8e4f5] text-xs sm:text-sm font-semibold truncate max-w-[100px] sm:max-w-[160px]">{userData.name}</p>
-                <p className="text-[#8892b0]/70 text-[10px] sm:text-xs hidden sm:block">{userData.dob} · {userData.place}</p>
-              </motion.div>
-            )}
-            <div className="relative">
-              <select
-                value={i18n.language}
-                onChange={e => i18n.changeLanguage(e.target.value)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-full py-1.5 sm:py-2 pl-3 sm:pl-4 pr-8 sm:pr-10 text-[#e8e4f5] text-xs sm:text-sm outline-none cursor-pointer font-['Inter']"
-              >
-                {[['en', 'EN'], ['hi', 'हि'], ['mr', 'मरा'], ['gu', 'ગુ']].map(([v, l]) => (
-                  <option key={v} value={v} className="bg-[#0c0c24]">{l}</option>
-                ))}
-              </select>
-              <svg className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#D4AF37]/80" width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
+            </div>
+            <div className="hidden sm:block">
+              <span className="font-[var(--font-display)] text-[var(--text-body)] font-bold text-[var(--color-text-primary)] tracking-wide">
+                {t('app_title')}
+              </span>
+              <span className="ml-[var(--space-2)] text-[var(--text-caption)] text-[var(--color-text-muted)]">
+                {t('tagline')}
+              </span>
             </div>
           </div>
-        </motion.header>
 
-        {/* ──────────────── MAIN CONTENT ──────────────── */}
-        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto lg:overflow-hidden">
-          {/* ── Hero Title ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex-shrink-0 text-center px-4 py-2 sm:py-3 lg:py-4"
-          >
-            <h1 className="font-['Cinzel'] font-black text-xl sm:text-2xl md:text-4xl lg:text-5xl leading-tight mb-1 sm:mb-2 text-transparent bg-clip-text bg-gradient-to-br from-[#f5c842] via-[#d4af37] to-[#f0c040]">
-              {t('discover_destiny')}
-            </h1>
-            <p className="text-[#8892b0]/80 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed font-['Inter']">
-              {t('hero_subtitle')}
-            </p>
-          </motion.div>
-
-          {/* ──────────────── MAIN LAYOUT ──────────────── */}
-          <main className="flex-1 min-h-0 px-3 sm:px-4 pb-4 sm:pb-6 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch lg:items-center justify-center gap-4 sm:gap-6 lg:gap-10 xl:gap-16">
-
-            {/* ── Mobile: Wheel FIRST, Panel SECOND ── */}
-            {/* ── Desktop: Panel LEFT, Wheel RIGHT ── */}
-
-            {/* ── Fortune Wheel Column ── */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="order-1 lg:order-2 flex flex-col items-center justify-center w-full lg:w-[55%] lg:h-full"
+          <div className="flex items-center gap-[var(--space-3)] sm:gap-[var(--space-5)]">
+            {userData && (
+              <div className="text-right hidden sm:block">
+                <p className="text-[var(--text-small)] text-[var(--color-text-primary)] font-medium truncate max-w-[140px]">{userData.name}</p>
+                <p className="text-[var(--text-caption)] text-[var(--color-text-muted)]">{userData.place}</p>
+              </div>
+            )}
+            <select
+              value={i18n.language}
+              onChange={e => i18n.changeLanguage(e.target.value)}
+              className="bg-white/[0.04] border border-[var(--color-border)] rounded-full py-1.5 pl-3 pr-6 text-[var(--color-text-primary)] text-[var(--text-small)] cursor-pointer outline-none focus:border-[var(--color-border-active)]"
+              aria-label="Language"
             >
+              {(['en', 'hi', 'mr', 'gu'] as const).map(code => (
+                <option key={code} value={code} className="bg-[#0c0c24]">{t(`lang_${code}`)}</option>
+              ))}
+            </select>
+          </div>
+        </header>
+
+        {/* ─── Main Content ─── */}
+        <main className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden scroll-area">
+          <div className="h-full flex flex-col lg:flex-row items-center lg:items-stretch max-w-[1400px] mx-auto px-[var(--space-4)] sm:px-[var(--space-6)] lg:px-[var(--space-8)] py-[var(--space-4)] lg:py-[var(--space-6)] gap-[var(--space-6)] lg:gap-[var(--space-10)]">
+
+            {/* ─── Wheel Column (shows first on mobile) ─── */}
+            <section className="order-1 lg:order-2 w-full lg:w-[55%] flex flex-col items-center justify-center min-h-[320px] sm:min-h-[380px] lg:min-h-0 lg:h-full">
               <FortuneWheel
                 onSpinComplete={handleSpinComplete}
                 spinning={spinning}
                 setSpinning={setSpinning}
               />
-            </motion.div>
+            </section>
 
-            {/* ── Gamification Panel Column ── */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="order-2 lg:order-1 flex flex-col w-full lg:w-[45%] max-w-[520px] mx-auto lg:mx-0 lg:max-w-none flex-shrink-0 justify-center lg:h-full"
-            >
-              <GamificationPanel
+            {/* ─── Info Column ─── */}
+            <section className="order-2 lg:order-1 w-full lg:w-[45%] flex flex-col justify-center gap-[var(--space-4)] max-w-[480px] mx-auto lg:mx-0 lg:max-w-none lg:h-full">
+              {/* Hero text */}
+              <div className="text-center lg:text-left">
+                <h1 className="font-[var(--font-display)] font-black text-[var(--text-display)] leading-tight text-[var(--color-accent-bright)] mb-[var(--space-2)]">
+                  {t('discover_destiny')}
+                </h1>
+                <p className="text-[var(--text-body)] text-[var(--color-text-secondary)] leading-relaxed max-w-[400px] mx-auto lg:mx-0">
+                  {t('hero_subtitle')}
+                </p>
+              </div>
+
+              {/* Karma panel */}
+              <KarmaPanel
                 points={karmaPoints}
                 threshold={GOAL_THRESHOLD}
                 onAskQuestion={handleAskQuestion}
@@ -172,20 +137,21 @@ function App() {
                 readingData={readingData}
               />
 
-              <div className="text-center mt-4 sm:mt-6">
+              {/* Footer link */}
+              <p className="text-center lg:text-left">
                 <a
                   href="https://yogvivaah.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs sm:text-sm text-[#8892b0]/50 tracking-wide font-['Inter'] hover:text-[#D4AF37]/80 transition-colors"
+                  className="text-[var(--text-caption)] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors duration-200"
                 >
                   {t('join_yogvivaah')}
                 </a>
-              </div>
-            </motion.div>
+              </p>
+            </section>
 
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </>
   );

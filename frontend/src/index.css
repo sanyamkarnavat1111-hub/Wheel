@@ -1,22 +1,55 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* ─── Design Tokens ─────────────────────────────────────── */
 @theme {
-  --font-cinzel: "Cinzel", serif;
-  --font-inter: "Inter", sans-serif;
-  --color-void: #060614;
-  --color-cosmos: #0c0c24;
-  --color-deep: #10102e;
-  --color-panel: rgba(16, 16, 46, 0.75);
-  --color-gold: #d4af37;
-  --color-amber: #f5a623;
-  --color-saffron: #ff9500;
-  --color-stardust: #8892b0;
-  --color-light: #e8e4f5;
-  --color-mystic: #060614;
+  --font-display: "Cinzel", serif;
+  --font-body: "Inter", sans-serif;
+
+  --color-bg: #060614;
+  --color-surface: rgba(10, 8, 28, 0.82);
+  --color-surface-elevated: rgba(16, 12, 40, 0.9);
+  --color-border: rgba(212, 175, 55, 0.12);
+  --color-border-active: rgba(212, 175, 55, 0.4);
+  --color-text-primary: #f0edf8;
+  --color-text-secondary: #8892b0;
+  --color-text-muted: rgba(136, 146, 176, 0.5);
+  --color-accent: #d4af37;
+  --color-accent-bright: #f5c842;
+  --color-accent-dim: rgba(212, 175, 55, 0.15);
+  --color-error: #e05f5f;
+  --color-success: #4ecb71;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* ─── Spacing scale (4px base) ───────────────────────────── */
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+}
+
+/* ─── Type scale ─────────────────────────────────────────── */
+:root {
+  --text-display: clamp(1.75rem, 4vw, 3rem);
+  --text-h1: clamp(1.5rem, 3vw, 2.25rem);
+  --text-h2: clamp(1.125rem, 2vw, 1.5rem);
+  --text-h3: clamp(1rem, 1.5vw, 1.25rem);
+  --text-body: clamp(0.875rem, 1.2vw, 1rem);
+  --text-small: clamp(0.75rem, 1vw, 0.875rem);
+  --text-caption: clamp(0.625rem, 0.8vw, 0.75rem);
+}
+
+/* ─── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
   height: 100%;
@@ -24,13 +57,15 @@ html, body, #root {
 }
 
 body {
-  font-family: "Inter", sans-serif;
-  background: #060614;
-  color: #e8e4f5;
-  overflow-x: hidden;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Canvas fills entire viewport */
+/* ─── Canvas Background ──────────────────────────────────── */
 #cosmic-canvas {
   position: fixed;
   inset: 0;
@@ -38,181 +73,70 @@ body {
   pointer-events: none;
 }
 
-/* Scrollable content layer */
-.app-layer {
+/* ─── App Shell ──────────────────────────────────────────── */
+.app-shell {
   position: relative;
   z-index: 1;
   height: 100dvh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* ─── Glass Panel ─────────────────────────────────────────── */
-.glass {
-  background: rgba(12, 12, 36, 0.72);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+/* ─── Scrollbar ──────────────────────────────────────────── */
+.scroll-area::-webkit-scrollbar { width: 3px; }
+.scroll-area::-webkit-scrollbar-track { background: transparent; }
+.scroll-area::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.2); border-radius: 3px; }
+
+/* ─── Focus Styles ───────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
-.glass-light {
-  background: rgba(16, 16, 46, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.07);
-}
-
-/* ─── Gold gradient text ─────────────────────────────────── */
-.gold-text {
-  background: linear-gradient(135deg, #f5a623 0%, #d4af37 50%, #f0c040 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ─── Wheel glow ─────────────────────────────────────────── */
-.wheel-ring {
-  filter:
-    drop-shadow(0 0 12px rgba(212,175,55,0.5))
-    drop-shadow(0 0 30px rgba(212,175,55,0.25))
-    drop-shadow(0 0 60px rgba(212,175,55,0.1));
-}
-
-/* ─── Spin button ────────────────────────────────────────── */
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(245,166,35,0.5), 0 0 40px rgba(245,166,35,0.2), 0 4px 20px rgba(0,0,0,0.4);
+/* ─── Reduced Motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-  50% {
-    box-shadow: 0 0 35px rgba(245,166,35,0.8), 0 0 70px rgba(245,166,35,0.35), 0 4px 20px rgba(0,0,0,0.4);
-  }
+}
+
+/* ─── Spin Button ────────────────────────────────────────── */
+@keyframes spin-glow {
+  0%, 100% { box-shadow: 0 0 16px rgba(245,166,35,0.4), 0 4px 16px rgba(0,0,0,0.3); }
+  50% { box-shadow: 0 0 28px rgba(245,166,35,0.7), 0 4px 16px rgba(0,0,0,0.3); }
 }
 
 .spin-btn {
-  font-family: "Cinzel", serif;
+  font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: 0.2em;
-  background: linear-gradient(135deg, #f5a623 0%, #d4af37 100%);
-  color: #060614;
+  letter-spacing: 0.18em;
+  background: linear-gradient(135deg, var(--color-accent-bright), var(--color-accent));
+  color: var(--color-bg);
   border: none;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: pulse-glow 2.5s ease-in-out infinite;
+  animation: spin-glow 3s ease-in-out infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .spin-btn:hover:not(:disabled) {
   animation: none;
-  transform: scale(1.06) translateY(-2px);
-  box-shadow: 0 0 50px rgba(245,166,35,0.9), 0 0 90px rgba(245,166,35,0.4), 0 8px 30px rgba(0,0,0,0.5);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 0 36px rgba(245,166,35,0.8), 0 6px 20px rgba(0,0,0,0.4);
+}
+
+.spin-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
 }
 
 .spin-btn:disabled {
   animation: none;
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
 
-/* ─── Slide-up animation ─────────────────────────────────── */
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.slide-up { animation: slide-up 0.55s cubic-bezier(0.4,0,0.2,1) forwards; }
-
-/* ─── Lucky number entrance ──────────────────────────────── */
-@keyframes pop-in {
-  0%   { opacity: 0; transform: scale(0.6); }
-  70%  { transform: scale(1.1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.pop-in { animation: pop-in 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-
-/* ─── Shimmer skeleton ───────────────────────────────────── */
-@keyframes shimmer {
-  0%   { background-position: -400% 0; }
-  100% { background-position:  400% 0; }
-}
-
-.shimmer {
-  background: linear-gradient(90deg,
-    rgba(255,255,255,0.02) 0%,
-    rgba(255,255,255,0.07) 50%,
-    rgba(255,255,255,0.02) 100%
-  );
-  background-size: 400% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
-  border-radius: 6px;
-}
-
-/* ─── Orb glow badge ─────────────────────────────────────── */
-.lucky-badge {
-  background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(245,166,35,0.08));
-  border: 1px solid rgba(212,175,55,0.35);
-  transition: all 0.3s ease;
-}
-
-.lucky-badge:hover {
-  background: linear-gradient(135deg, rgba(212,175,55,0.25), rgba(245,166,35,0.15));
-  border-color: rgba(212,175,55,0.55);
-}
-
-/* ─── Energy progress bar ────────────────────────────────── */
-@keyframes bar-fill {
-  from { width: 0; }
-}
-
-.energy-bar-fill {
-  animation: bar-fill 1.2s cubic-bezier(0.4,0,0.2,1) forwards;
-  background: linear-gradient(90deg, #d4af37, #f5a623, #d4af37);
-  background-size: 200% 100%;
-  animation: bar-fill 1.2s cubic-bezier(0.4,0,0.2,1) forwards, shimmer 2s ease-in-out infinite;
-}
-
-/* ─── Select override ────────────────────────────────────── */
+/* ─── Utility: select reset ──────────────────────────────── */
 select { appearance: none; -webkit-appearance: none; }
-
-/* ─── Scrollbar ──────────────────────────────────────────── */
-.app-layer::-webkit-scrollbar { width: 4px; }
-.app-layer::-webkit-scrollbar-track { background: transparent; }
-.app-layer::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.25); border-radius: 2px; }
-
-/* ─── Custom scrollbar for reading panels ────────────────── */
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 2px; }
-
-/* ─── Fade-in animation ──────────────────────────────────── */
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* ─── Float animation for subtle element movement ────────── */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* ─── Glow pulse for cards ───────────────────────────────── */
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 15px rgba(212,175,55,0.1), 0 8px 32px rgba(0,0,0,0.35); }
-  50% { box-shadow: 0 0 25px rgba(212,175,55,0.2), 0 8px 32px rgba(0,0,0,0.35); }
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 4s ease-in-out infinite;
-}
-
-/* ─── Responsive typography helpers ──────────────────────── */
-@media (max-width: 380px) {
-  .app-layer { font-size: 14px; }
-}

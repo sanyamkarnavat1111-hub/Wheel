@@ -17,8 +17,8 @@ export const POINTS_SLICES = [
   { points: 450, color1: '#6B705C', color2: '#3F4235' },
 ];
 
-const NUM   = POINTS_SLICES.length;
-const SLICE = 360 / NUM; // 30 degrees per slice
+const NUM = POINTS_SLICES.length;
+const SLICE_DEG = 360 / NUM;
 
 interface Props {
   onSpinComplete: (points: number) => void;
@@ -28,16 +28,16 @@ interface Props {
 
 export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: Props) {
   const { t } = useTranslation();
-  const [rotation, setRotation]   = useState(0);
+  const [rotation, setRotation] = useState(0);
   const [landedIdx, setLandedIdx] = useState<number | null>(null);
   const controls = useAnimation();
 
-  // Idle animation
+  // Slow idle rotation
   useEffect(() => {
     if (!spinning && landedIdx === null) {
       controls.start({
         rotate: [0, 360],
-        transition: { repeat: Infinity, duration: 120, ease: "linear" }
+        transition: { repeat: Infinity, duration: 90, ease: 'linear' },
       });
     }
   }, [spinning, landedIdx, controls]);
@@ -46,144 +46,107 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
     if (spinning) return;
     setSpinning(true);
     setLandedIdx(null);
-    controls.stop(); // Stop idle animation
+    controls.stop();
 
-    const extra       = Math.floor(Math.random() * NUM);
-    const currentRotate = (rotation % 360);
-    const newRotation = currentRotate + 360 * 8 + extra * SLICE;
-    
-    setRotation(newRotation);
-    
+    const extra = Math.floor(Math.random() * NUM);
+    const curr = rotation % 360;
+    const newRot = curr + 360 * 7 + extra * SLICE_DEG;
+    setRotation(newRot);
+
     controls.start({
-      rotate: newRotation,
-      transition: { duration: 5.5, ease: [0.1, 0.85, 0.15, 1.0] }
+      rotate: newRot,
+      transition: { duration: 5, ease: [0.12, 0.84, 0.14, 1.0] },
     }).then(() => {
       setSpinning(false);
-      const norm = ((newRotation % 360) + 360) % 360;
-      const idx  = Math.floor(((360 - norm + SLICE / 2) % 360) / SLICE) % NUM;
+      const norm = ((newRot % 360) + 360) % 360;
+      const idx = Math.floor(((360 - norm + SLICE_DEG / 2) % 360) / SLICE_DEG) % NUM;
       setLandedIdx(idx);
       onSpinComplete(POINTS_SLICES[idx].points);
-      
-      // Resume slow idle spin from the landed position after a delay
+
       setTimeout(() => {
         controls.start({
-          rotate: newRotation + 360,
-          transition: { repeat: Infinity, duration: 120, ease: "linear" }
+          rotate: newRot + 360,
+          transition: { repeat: Infinity, duration: 90, ease: 'linear' },
         });
-      }, 3000);
+      }, 2500);
     });
   };
 
-  // SVG Dimension Definitions
-  const SZ = 500;
-  const CX = 250;
-  const CY = 250;
-  const R  = 235;
-  const IR = 55;
+  // SVG geometry
+  const SZ = 500, CX = 250, CY = 250, R = 230, IR = 52;
 
-  const polarToCartesian = (deg: number, radius: number) => {
+  const polar = (deg: number, radius: number) => {
     const rad = ((deg - 90) * Math.PI) / 180;
     return { x: CX + radius * Math.cos(rad), y: CY + radius * Math.sin(rad) };
   };
 
-  const arcPath = (startDeg: number, endDeg: number, outerR: number, innerR: number) => {
-    const s1 = polarToCartesian(startDeg, outerR);
-    const e1 = polarToCartesian(endDeg, outerR);
-    const s2 = polarToCartesian(startDeg, innerR);
-    const e2 = polarToCartesian(endDeg, innerR);
-    return `M ${s2.x} ${s2.y} L ${s1.x} ${s1.y} A ${outerR} ${outerR} 0 0 1 ${e1.x} ${e1.y} L ${e2.x} ${e2.y} A ${innerR} ${innerR} 0 0 0 ${s2.x} ${s2.y} Z`;
+  const arc = (s: number, e: number, oR: number, iR: number) => {
+    const s1 = polar(s, oR), e1 = polar(e, oR), s2 = polar(s, iR), e2 = polar(e, iR);
+    return `M${s2.x} ${s2.y} L${s1.x} ${s1.y} A${oR} ${oR} 0 0 1 ${e1.x} ${e1.y} L${e2.x} ${e2.y} A${iR} ${iR} 0 0 0 ${s2.x} ${s2.y}Z`;
   };
 
   return (
-    <div className="flex flex-col items-center justify-center select-none w-full h-full gap-2 sm:gap-3">
-      {/* ── Precision Pointer Arrow ── */}
-      <motion.div
-        animate={{ y: [0, -4, 0] }}
-        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-        className="mb-[-16px] sm:mb-[-20px] z-20 relative drop-shadow-[0_4px_12px_rgba(245,196,66,0.7)]"
-      >
-        <svg className="w-6 h-8 sm:w-8 sm:h-10" viewBox="0 0 28 34" fill="none">
-          <path d="M14 34 L0 0 L28 0 Z" fill="url(#ptr-gold-grad)" stroke="#FFF" strokeWidth="1" />
+    <div className="flex flex-col items-center justify-center w-full h-full gap-3 select-none">
+      {/* Pointer */}
+      <div className="relative z-10 mb-[-14px]">
+        <svg width="24" height="30" viewBox="0 0 24 30" fill="none" aria-hidden="true">
+          <path d="M12 30 L0 0 L24 0 Z" fill="url(#ptr)" stroke="rgba(255,255,255,0.6)" strokeWidth="0.5" />
           <defs>
-            <linearGradient id="ptr-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="ptr" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#FFE066" />
-              <stop offset="50%" stopColor="#F5C442" />
               <stop offset="100%" stopColor="#B8862A" />
             </linearGradient>
           </defs>
         </svg>
-      </motion.div>
+      </div>
 
-      {/* ── Main Wheel Frame ── */}
-      <div className="relative w-[70vw] max-w-[280px] sm:w-[55vw] sm:max-w-[340px] md:max-w-[380px] lg:w-full lg:max-w-[420px] xl:max-w-[480px] 2xl:max-w-[520px] aspect-square">
-        {/* Ambient Glow */}
-        <motion.div 
-          animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-          className="absolute -inset-3 sm:-inset-4 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(245,196,66,0.15) 0%, rgba(245,196,66,0) 70%)' }}
-        />
-
-        <motion.div
-          animate={controls}
-          className="w-full aspect-square relative"
-        >
-          <svg viewBox={`0 0 ${SZ} ${SZ}`} className="w-full h-full block">
+      {/* Wheel */}
+      <div className="relative w-[min(65vw,280px)] sm:w-[min(50vw,320px)] md:w-[min(45vw,360px)] lg:w-[min(40vw,400px)] xl:w-[420px] aspect-square">
+        <motion.div animate={controls} className="w-full h-full">
+          <svg viewBox={`0 0 ${SZ} ${SZ}`} className="w-full h-full block drop-shadow-[0_0_30px_rgba(212,175,55,0.2)]">
             <defs>
-              <linearGradient id="gold-border" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="gold-rim" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFE066" />
-                <stop offset="30%" stopColor="#F5C442" />
-                <stop offset="70%" stopColor="#9A6B1F" />
+                <stop offset="40%" stopColor="#D4AF37" />
+                <stop offset="80%" stopColor="#9A6B1F" />
                 <stop offset="100%" stopColor="#FFE066" />
               </linearGradient>
-              
-              <radialGradient id="center-hub-grad" cx="50%" cy="40%">
-                <stop offset="0%" stopColor="#2A1B4E" />
-                <stop offset="70%" stopColor="#120A27" />
+              <radialGradient id="hub" cx="50%" cy="40%">
+                <stop offset="0%" stopColor="#1e1240" />
                 <stop offset="100%" stopColor="#080414" />
               </radialGradient>
-
-              {POINTS_SLICES.map((slice, i) => (
-                <radialGradient key={i} id={`slice-grad-${i}`} cx="50%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor={slice.color1} />
-                  <stop offset="100%" stopColor={slice.color2} />
+              {POINTS_SLICES.map((s, i) => (
+                <radialGradient key={i} id={`sg${i}`} cx="50%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor={s.color1} />
+                  <stop offset="100%" stopColor={s.color2} />
                 </radialGradient>
               ))}
             </defs>
 
-            <circle cx={CX} cy={CY} r={R + 3} fill="#0A0618" stroke="url(#gold-border)" strokeWidth="5" />
+            {/* Outer ring */}
+            <circle cx={CX} cy={CY} r={R + 4} fill="none" stroke="url(#gold-rim)" strokeWidth="4" />
 
+            {/* Slices */}
             {POINTS_SLICES.map((slice, i) => {
-              const startDeg = i * SLICE;
-              const endDeg   = startDeg + SLICE;
-              const midDeg   = startDeg + SLICE / 2;
+              const startDeg = i * SLICE_DEG;
+              const endDeg = startDeg + SLICE_DEG;
+              const midDeg = startDeg + SLICE_DEG / 2;
               const isLanded = landedIdx === i;
-
               return (
                 <g key={i}>
                   <path
-                    d={arcPath(startDeg, endDeg, R, IR)}
-                    fill={`url(#slice-grad-${i})`}
-                    stroke="rgba(245, 196, 66, 0.3)"
-                    strokeWidth="1.5"
-                    style={{
-                      transition: 'filter 0.4s ease',
-                      filter: isLanded ? 'brightness(1.8) saturate(1.4)' : 'none',
-                    }}
+                    d={arc(startDeg, endDeg, R, IR)}
+                    fill={`url(#sg${i})`}
+                    stroke="rgba(212,175,55,0.2)"
+                    strokeWidth="1"
+                    style={{ filter: isLanded ? 'brightness(1.7) saturate(1.3)' : 'none', transition: 'filter 0.4s' }}
                   />
-
                   <g transform={`rotate(${midDeg}, ${CX}, ${CY})`}>
                     <text
-                      x={CX}
-                      y={CY - 142}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fontFamily="Cinzel, serif"
-                      fontSize="24"
-                      fontWeight="900"
-                      fill="#FFF5D6"
-                      letterSpacing="0.05em"
-                      style={{ textShadow: '0 2px 6px rgba(0,0,0,0.8)' }}
+                      x={CX} y={CY - R * 0.6}
+                      textAnchor="middle" dominantBaseline="middle"
+                      fontFamily="Cinzel, serif" fontSize="22" fontWeight="800"
+                      fill="#FFF5D6" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
                     >
                       {slice.points}
                     </text>
@@ -192,65 +155,45 @@ export default function FortuneWheel({ onSpinComplete, spinning, setSpinning }: 
               );
             })}
 
+            {/* Spokes */}
             {POINTS_SLICES.map((_, i) => {
-              const p1 = polarToCartesian(i * SLICE, IR);
-              const p2 = polarToCartesian(i * SLICE, R);
-              return (
-                <line
-                  key={i}
-                  x1={p1.x} y1={p1.y}
-                  x2={p2.x} y2={p2.y}
-                  stroke="url(#gold-border)"
-                  strokeWidth="2"
-                  opacity="0.6"
-                />
-              );
+              const p1 = polar(i * SLICE_DEG, IR);
+              const p2 = polar(i * SLICE_DEG, R);
+              return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="rgba(212,175,55,0.25)" strokeWidth="1.5" />;
             })}
 
-            <circle cx={CX} cy={CY} r={IR} fill="none" stroke="url(#gold-border)" strokeWidth="3" />
-            <circle cx={CX} cy={CY} r={IR - 2} fill="url(#center-hub-grad)" />
-            <circle cx={CX} cy={CY} r={IR - 8} fill="none" stroke="rgba(245,196,66,0.4)" strokeWidth="1.5" />
-
-            <text
-              x={CX}
-              y={CY + 3}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize="28"
-              fontFamily="serif"
-              fill="url(#gold-border)"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(245,196,66,0.8))' }}
-            >
+            {/* Hub */}
+            <circle cx={CX} cy={CY} r={IR} fill="url(#hub)" stroke="url(#gold-rim)" strokeWidth="3" />
+            <text x={CX} y={CY + 2} textAnchor="middle" dominantBaseline="middle" fontSize="24" fontFamily="serif" fill="url(#gold-rim)" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.7))' }}>
               ॐ
             </text>
           </svg>
         </motion.div>
       </div>
 
-      {/* ── Landed Result Banner ── */}
+      {/* Result banner */}
       <AnimatePresence>
         {landedIdx !== null && !spinning && (
-          <motion.div
-            initial={{ opacity: 0, y: 15, scale: 0.9 }}
+          <motion.p
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15 }}
-            className="bg-gradient-to-br from-[#1e103c]/95 to-[#0f0823]/95 backdrop-blur-md border border-[#F5C442]/50 rounded-full px-4 sm:px-6 py-1.5 sm:py-2.5 text-[#FFE066] font-['Cinzel'] font-extrabold text-sm sm:text-lg tracking-wider shadow-[0_6px_24px_rgba(0,0,0,0.6),0_0_20px_rgba(245,196,66,0.3)]"
+            exit={{ opacity: 0, y: 10 }}
+            className="text-[var(--color-accent-bright)] font-[var(--font-display)] font-bold text-[var(--text-h3)] tracking-wide"
           >
             {t('points_earned', { points: POINTS_SLICES[landedIdx].points })}
-          </motion.div>
+          </motion.p>
         )}
       </AnimatePresence>
 
-      {/* ── Spin Action Button ── */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      {/* Spin button */}
+      <button
         onClick={handleSpin}
         disabled={spinning}
-        className="spin-btn rounded-full font-['Cinzel'] font-extrabold text-xs sm:text-sm tracking-[0.15em] transition-all px-8 sm:px-10 py-2.5 sm:py-3 mt-1 sm:mt-2"
+        className="spin-btn rounded-full px-8 py-2.5 sm:px-10 sm:py-3 text-[var(--text-small)] sm:text-[var(--text-body)]"
+        aria-label={spinning ? t('spinning') : t('spin_now')}
       >
         {spinning ? t('spinning') : t('spin_now')}
-      </motion.button>
+      </button>
     </div>
   );
 }
