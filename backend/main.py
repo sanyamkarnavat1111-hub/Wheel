@@ -102,6 +102,12 @@ async def get_wheel_reading(request: WheelRequest):
         print(f"Error generating reading: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to generate cosmic reading")
 
+
+@app.get("/health")
+def get_health():
+    return "server is running.."
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
