@@ -66,6 +66,144 @@ const TOKENS = {
   line: "rgba(255,255,255,0.08)",
 };
 
+
+const TRANSLATIONS = {
+  en: {
+    langName: "English",
+    intakeTitle: "{t.intakeTitle}",
+    intakeHeading: "Chart your path.",
+    intakeDesc: "{t.intakeDesc}",
+    fullName: "Full Name",
+    placeOfBirth: "Place of Birth",
+    timeOfBirth: "Time of Birth",
+    fillAll: "{t.fillAll}",
+    revealPath: "{t.revealPath}",
+    aligning: "{t.aligning}",
+    wheelTitle: "{t.wheelTitle}",
+    wheelOrbits: "08 Orbits",
+    spinBtn: "SPIN",
+    spinning: "SPINNING",
+    heroPlayground: "Unlock Your Kundli Secrets",
+    heroTitle1: "Spin the wheel of destiny.",
+    heroTitle2: "Connect with your path.",
+    heroDesc: "Gather cosmic energy and seek guidance from your personal AI Astrologer.",
+    chatTitle: "AI Astrologer",
+    chatSubtitle: "Your Celestial Guide",
+    chatGreeting: "The veil lifts, {name}. Your energy has reached {target}. Ask your question.",
+    chatInput: t.chatInput,
+    chatLocked: t.chatLocked,
+    chatSend: "Send",
+    chatError: "The cosmic connection was interrupted. Please try again.",
+    energy: "Cosmic Energy",
+    channelMsg1: "You channeled ",
+    channelMsg2: " energy",
+    channelFail: "The stars stayed silent. Try again.",
+    lockMsg1: "Your private channel to the cosmos will appear here.",
+    lockMsg2: "Gather the remaining Cosmic Energy to unlock your one-time private reading."
+  },
+  hi: {
+    langName: "हिंदी",
+    intakeTitle: "कुंडली विवरण",
+    intakeHeading: "अपना मार्ग चुनें।",
+    intakeDesc: "तीन विवरण, और सितारे आपके भविष्य को संरेखित करना शुरू कर देंगे।",
+    fullName: "पूरा नाम",
+    placeOfBirth: "जन्म स्थान",
+    timeOfBirth: "जन्म का समय",
+    fillAll: "कृपया सभी फ़ील्ड भरें।",
+    revealPath: "मेरा मार्ग दिखाएं",
+    aligning: "सितारों को संरेखित कर रहे हैं...",
+    wheelTitle: "भाग्य चक्र",
+    wheelOrbits: "08 कक्ष",
+    spinBtn: "घुमाएं",
+    spinning: "घूम रहा है",
+    heroPlayground: "अपनी कुंडली के रहस्य खोलें",
+    heroTitle1: "नियति का चक्र घुमाएं।",
+    heroTitle2: "अपने मार्ग से जुड़ें।",
+    heroDesc: "ब्रह्मांडीय ऊर्जा एकत्र करें और अपने व्यक्तिगत AI ज्योतिषी से मार्गदर्शन लें।",
+    chatTitle: "AI ज्योतिषी",
+    chatSubtitle: "आपका मार्गदर्शक",
+    chatGreeting: "नमस्ते {name}। आपकी ऊर्जा {target} तक पहुँच गई है। अपना प्रश्न पूछें।",
+    chatInput: "अपने मार्ग के बारे में पूछें...",
+    chatLocked: "चैनल बंद है",
+    chatSend: "भेजें",
+    chatError: "ब्रह्मांडीय संपर्क टूट गया। कृपया पुनः प्रयास करें।",
+    energy: "ब्रह्मांडीय ऊर्जा",
+    channelMsg1: "आपको ",
+    channelMsg2: " ऊर्जा प्राप्त हुई",
+    channelFail: "सितारे शांत रहे। पुनः प्रयास करें।",
+    lockMsg1: "ब्रह्मांड के साथ आपका निजी चैनल यहाँ दिखाई देगा।",
+    lockMsg2: "अपना निजी सत्र खोलने के लिए शेष ब्रह्मांडीय ऊर्जा एकत्र करें।"
+  },
+  mr: {
+    langName: "मराठी",
+    intakeTitle: "कुंडली तपशील",
+    intakeHeading: "तुमचा मार्ग निवडा.",
+    intakeDesc: "तीन तपशील, आणि तारे तुमचे भविष्य जुळवण्यास सुरुवात करतील.",
+    fullName: "पूर्ण नाव",
+    placeOfBirth: "जन्म ठिकाण",
+    timeOfBirth: "जन्म वेळ",
+    fillAll: "कृपया सर्व माहिती भरा.",
+    revealPath: "माझा मार्ग दाखवा",
+    aligning: "तारे जुळवत आहे...",
+    wheelTitle: "भाग्य चक्र",
+    wheelOrbits: "08 कक्षा",
+    spinBtn: "फिरवा",
+    spinning: "फिरत आहे",
+    heroPlayground: "तुमची कुंडली जाणून घ्या",
+    heroTitle1: "नियतीचे चक्र फिरवा.",
+    heroTitle2: "तुमच्या मार्गाशी जोडा.",
+    heroDesc: "वैश्विक ऊर्जा गोळा करा आणि तुमच्या वैयक्तिक AI ज्योतिषाकडून मार्गदर्शन मिळवा.",
+    chatTitle: "AI ज्योतिषी",
+    chatSubtitle: "तुमचा मार्गदर्शक",
+    chatGreeting: "नमस्कार {name}. तुमची ऊर्जा {target} वर पोहोचली आहे. तुमचा प्रश्न विचारा.",
+    chatInput: "तुमच्या भविष्याबद्दल विचारा...",
+    chatLocked: "चॅनेल बंद आहे",
+    chatSend: "पाठवा",
+    chatError: "संपर्क तुटला. कृपया पुन्हा प्रयत्न करा.",
+    energy: "वैश्विक ऊर्जा",
+    channelMsg1: "तुम्हाला ",
+    channelMsg2: " ऊर्जा मिळाली",
+    channelFail: "तारे शांत राहिले. पुन्हा प्रयत्न करा.",
+    lockMsg1: "ब्रह्मांडाशी तुमचे खाजगी चॅनेल येथे दिसेल.",
+    lockMsg2: "तुमचे खाजगी सत्र उघडण्यासाठी उर्वरित वैश्विक ऊर्जा गोळा करा."
+  },
+  gu: {
+    langName: "ગુજરાતી",
+    intakeTitle: "કુંડળી વિગતો",
+    intakeHeading: "તમારો માર્ગ પસંદ કરો.",
+    intakeDesc: "ત્રણ વિગતો, અને તારાઓ તમારું ભવિષ્ય ગોઠવવાનું શરૂ કરશે.",
+    fullName: "પૂરું નામ",
+    placeOfBirth: "જન્મ સ્થળ",
+    timeOfBirth: "જન્મ સમય",
+    fillAll: "કૃપા કરીને બધી માહિતી ભરો.",
+    revealPath: "મારો માર્ગ બતાવો",
+    aligning: "તારાઓ ગોઠવાઈ રહ્યા છે...",
+    wheelTitle: "ભાગ્ય ચક્ર",
+    wheelOrbits: "08 કક્ષા",
+    spinBtn: "ફેરવો",
+    spinning: "ફરી રહ્યું છે",
+    heroPlayground: "તમારી કુંડળી જાણો",
+    heroTitle1: "નિયતિનું ચક્ર ફેરવો.",
+    heroTitle2: "તમારા માર્ગ સાથે જોડાઓ.",
+    heroDesc: "બ્રહ્માંડીય ઊર્જા એકત્રિત કરો અને તમારા વ્યક્તિગત AI જ્યોતિષી પાસેથી માર્ગદર્શન મેળવો.",
+    chatTitle: "AI જ્યોતિષી",
+    chatSubtitle: "તમારો માર્ગદર્શક",
+    chatGreeting: "નમસ્તે {name}. તમારી ઊર્જા {target} પર પહોંચી છે. તમારો પ્રશ્ન પૂછો.",
+    chatInput: "તમારા ભવિષ્ય વિશે પૂછો...",
+    chatLocked: "ચેનલ બંધ છે",
+    chatSend: "મોકલો",
+    chatError: "સંપર્ક તૂટી ગયો. કૃપા કરીને ફરી પ્રયાસ કરો.",
+    energy: "બ્રહ્માંડીય ઊર્જા",
+    channelMsg1: "તમને ",
+    channelMsg2: " ઊર્જા મળી",
+    channelFail: "તારાઓ શાંત રહ્યા. ફરી પ્રયાસ કરો.",
+    lockMsg1: "બ્રહ્માંડ સાથેની તમારી ખાનગી ચેનલ અહીં દેખાશે.",
+    lockMsg2: "તમારું ખાનગી સત્ર ખોલવા માટે બાકીની બ્રહ્માંડીય ઊર્જા એકત્રિત કરો."
+  }
+};
+
+const LanguageContext = React.createContext();
+
 const SEGMENTS = [
   { value: 500, label: "500", color: "#c9946b", weight: 1 },
   { value: 0, label: "0", color: "#1c1a2e", weight: 22 },
@@ -148,6 +286,11 @@ function GlobalStyles() {
         0%, 80%, 100% { opacity: .25; transform: translateY(0); }
         40% { opacity: 1; transform: translateY(-3px); }
       }
+      @keyframes idleSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .anim-idle-spin { animation: idleSpin 120s linear infinite; }
       @keyframes glassReveal {
         from { opacity: 0; transform: scale(1.05) translateY(20px); filter: blur(10px); }
         to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
@@ -236,7 +379,7 @@ function GlobalStyles() {
 function SpaceBackground() {
   const stars = useMemo(
     () =>
-      Array.from({ length: 70 }, (_, i) => ({
+      Array.from({ length: 35 }, (_, i) => ({
         id: i,
         top: Math.random() * 100,
         left: Math.random() * 100,
@@ -340,6 +483,7 @@ function useConfetti() {
    field entrance, hardened submit (button has onClick AND form onSubmit).
 --------------------------------------------------------------------------- */
 function UserDetailsModal({ onSubmit }) {
+  const { t } = React.useContext(LanguageContext);
   const [name, setName] = useState("");
   const [place, setPlace] = useState("");
   const [time, setTime] = useState("");
@@ -393,15 +537,15 @@ function UserDetailsModal({ onSubmit }) {
             <div className="flex items-center gap-2 mb-5">
               <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
               <span className="font-mono text-[11px] uppercase tracking-[0.22em]" style={{ color: TOKENS.gold }}>
-                Celestial Intake
+                {t.intakeTitle}
               </span>
             </div>
 
             <h1 className="font-display text-3xl sm:text-[2.15rem] font-semibold leading-tight tracking-tight">
-              Chart your <span className="text-gradient-gold">path.</span>
+              {t.intakeHeading.split(' ')[0]} <span className="text-gradient-gold">{t.intakeHeading.split(' ').slice(1).join(' ')}</span>
             </h1>
             <p className="text-sm mt-2.5 mb-8 leading-relaxed" style={{ color: TOKENS.mist }}>
-              Three details, and the stars will begin aligning your reading.
+              {t.intakeDesc}
             </p>
 
             <div className="space-y-4">
@@ -468,7 +612,7 @@ function UserDetailsModal({ onSubmit }) {
 
               {Object.keys(errors).some((k) => errors[k]) && (
                 <p className="text-xs pl-1" style={{ color: "#f472b6" }}>
-                  Fill in every field so the stars have something to work with.
+                  {t.fillAll}
                 </p>
               )}
             </div>
@@ -483,11 +627,11 @@ function UserDetailsModal({ onSubmit }) {
               {submitting ? (
                 <>
                   <span className="w-3.5 h-3.5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
-                  Aligning the stars...
+                  {t.aligning}
                 </>
               ) : (
                 <>
-                  Reveal My Path
+                  {t.revealPath}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -507,6 +651,7 @@ function UserDetailsModal({ onSubmit }) {
    Header — logo + scoreboard (matches reference: lightning icon, mono label)
 --------------------------------------------------------------------------- */
 function Header({ points, target }) {
+  const { lang, setLang, t } = React.useContext(LanguageContext);
   const pct = Math.min(100, (points / target) * 100);
   return (
     <header className="anim-fade-up">
@@ -518,7 +663,13 @@ function Header({ points, target }) {
           </span>
         </div>
 
-        <div className="card rounded-2xl px-4 sm:px-5 py-3 min-w-[170px] sm:min-w-[220px]">
+        <div className="flex items-center gap-3">
+          <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-display cursor-pointer hover:border-white/20 transition-colors">
+            {Object.entries(TRANSLATIONS).map(([key, val]) => (
+              <option key={key} value={key} className="bg-[#0a0a12]">{val.langName}</option>
+            ))}
+          </select>
+          <div className="card rounded-2xl px-4 sm:px-5 py-3 min-w-[170px] sm:min-w-[220px]">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
               <Zap className="w-3 h-3" style={{ color: TOKENS.gold }} />
@@ -536,6 +687,7 @@ function Header({ points, target }) {
             />
           </div>
         </div>
+</div>
       </div>
     </header>
   );
@@ -545,6 +697,7 @@ function Header({ points, target }) {
    Hero — typographic intro matching the reference
 --------------------------------------------------------------------------- */
 function Hero() {
+  const { t } = React.useContext(LanguageContext);
   return (
     <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-10 sm:pb-14 anim-fade-up" style={{ animationDelay: ".05s" }}>
       <div className="flex items-center gap-2 mb-4">
@@ -555,7 +708,7 @@ function Hero() {
       <h1 className="font-display font-semibold leading-[1.05] tracking-tight text-4xl sm:text-6xl">
         Spin the cosmos.
         <br />
-        <span className="text-gradient-violet">Read your path.</span>
+        <span className="text-gradient-violet">{t.heroTitle2}</span>
       </h1>
       <p className="text-sm sm:text-base mt-5 max-w-md leading-relaxed" style={{ color: TOKENS.mist }}>
         Gather energy from the stars to unlock a private reading with your AI Astrologer.
@@ -568,6 +721,7 @@ function Hero() {
    FortuneWheel
 --------------------------------------------------------------------------- */
 function FortuneWheel({ onWin, spinsUsed }) {
+  const { t } = React.useContext(LanguageContext);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [lastWin, setLastWin] = useState(null);
@@ -609,27 +763,30 @@ function FortuneWheel({ onWin, spinsUsed }) {
   return (
     <div className="card card-blur rounded-3xl p-6 sm:p-8 flex flex-col items-center anim-fade-up" style={{ animationDelay: ".1s" }}>
       <div className="self-start mb-8 font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color: TOKENS.mist }}>
-        The Fortune Wheel <span style={{ color: TOKENS.gold }}>· 08 Orbits</span>
+        {t.wheelTitle} <span style={{ color: TOKENS.gold }}>· {t.wheelOrbits}</span>
       </div>
 
       <div className="relative flex justify-center items-center" style={{ width: 'min(100%, 45vh, 440px)', height: 'min(100%, 45vh, 440px)', margin: '0 auto' }}>
         <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: "-3%" }}>
-          <div style={{ width: 0, height: 0, borderLeft: "clamp(6px, 1.5vw, 10px) solid transparent", borderRight: "clamp(6px, 1.5vw, 10px) solid transparent", borderTop: `clamp(12px, 3vw, 18px) solid ${TOKENS.gold}`, filter: "drop-shadow(0 0 6px rgba(232,184,102,0.7))" }} />
+          <div style={{ width: 0, height: 0, borderLeft: "clamp(6px, 1.5vw, 10px) solid transparent", borderRight: "clamp(6px, 1.5vw, 10px) solid transparent", borderTop: `clamp(12px, 3vw, 18px) solid ${TOKENS.gold}` }} />
         </div>
 
         <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle, rgba(139,123,255,0.2) 0%, transparent 70%)", animation: spinning ? "softPulse 0.8s infinite alternate" : "softPulse 4s infinite alternate", transform: "scale(1.2)", zIndex: -1 }}></div>
         
-        <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="wheel-transition" style={{ transform: `rotate(${rotation}deg)`, filter: "drop-shadow(0 0 22px rgba(232,184,102,0.22))" }}>
+        <div className="absolute inset-3 rounded-full" style={{ boxShadow: "0 0 40px rgba(232,184,102,0.15)", zIndex: 0 }}></div>
+        
+        <div className={`w-full h-full z-10 ${spinning ? "" : "anim-idle-spin"}`}>
+          <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="wheel-transition" style={{ transform: `rotate(${rotation}deg)` }}>
           <defs>
             <radialGradient id="segmentShadow" cx="50%" cy="50%" r="50%">
               <stop offset="50%" stopColor="#ffffff" stopOpacity="0" />
               <stop offset="100%" stopColor="#000000" stopOpacity="0.45" />
-              <animateTransform attributeName="gradientTransform" type="rotate" from="0 0.5 0.5" to="360 0.5 0.5" dur="15s" repeatCount="indefinite"/>
+              
             </radialGradient>
             <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
               <stop offset="85%" stopColor={TOKENS.goldSoft} />
               <stop offset="100%" stopColor={TOKENS.copper} />
-              <animateTransform attributeName="gradientTransform" type="rotate" from="360 0.5 0.5" to="0 0.5 0.5" dur="10s" repeatCount="indefinite"/>
+              
             </radialGradient>
           </defs>
           <circle cx={cx} cy={cy} r={r + 6} fill="none" stroke="url(#ringGlow)" strokeWidth="4" opacity="0.95" />
@@ -660,7 +817,8 @@ function FortuneWheel({ onWin, spinsUsed }) {
             );
           })}
           <circle cx={cx} cy={cy} r={r * 0.24} fill="#0b0a12" stroke={TOKENS.gold} strokeWidth="2" />
-        </svg>
+          </svg>
+        </div>
 
         <button
           ref={wheelBtnRef}
@@ -686,9 +844,9 @@ function FortuneWheel({ onWin, spinsUsed }) {
             <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
             <span className="font-display text-sm">
               {lastWin > 0 ? (
-                <>You channeled <span className="text-gradient-gold font-semibold">+{lastWin} energy</span></>
+                <>{t.channelMsg1} <span className="text-gradient-gold font-semibold">+{lastWin} {t.channelMsg2}</span></>
               ) : (
-                <span style={{ color: TOKENS.mist }}>The stars stayed silent. Try again.</span>
+                <span style={{ color: TOKENS.mist }}>{t.channelFail}</span>
               )}
             </span>
           </div>
@@ -710,6 +868,7 @@ const MYSTIC_REPLIES = [
 ];
 
 function ChatInterface({ unlocked, target, userDetails }) {
+  const { lang, t } = React.useContext(LanguageContext);
   const userName = userDetails?.name?.split(" ")[0];
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -719,7 +878,7 @@ function ChatInterface({ unlocked, target, userDetails }) {
 
   useEffect(() => {
     if (unlocked && !prevUnlocked.current) {
-      setMessages((m) => [...m, { role: "ai", text: `The veil lifts, ${userName || "seeker"}. Your energy has reached ${target}. Ask your question.` }]);
+      setMessages((m) => [...m, { role: "ai", text: `${t.chatGreeting.replace('{name}', userName || '').replace('{target}', target)}` }]);
     }
     prevUnlocked.current = unlocked;
   }, [unlocked, target, userName]);
@@ -745,7 +904,7 @@ function ChatInterface({ unlocked, target, userDetails }) {
           dob: "Unknown",
           time: userDetails?.time || "Unknown",
           place: userDetails?.place || "Unknown",
-          language: "English",
+          language: TRANSLATIONS[lang].langName,
           question: userQuestion
         })
       });
@@ -766,7 +925,7 @@ function ChatInterface({ unlocked, target, userDetails }) {
           <Moon className="w-4 h-4" style={{ color: TOKENS.violet }} />
         </div>
         <div className="flex-1">
-          <h2 className="font-display text-sm font-semibold">AI Astrologer</h2>
+          <h2 className="font-display text-sm font-semibold">{t.chatTitle}</h2>
           <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: TOKENS.mist }}>
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: unlocked ? "#4ade80" : TOKENS.mist }} />
             Your Celestial Guide
@@ -803,7 +962,7 @@ function ChatInterface({ unlocked, target, userDetails }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={!unlocked}
-            placeholder={unlocked ? "Ask about your path..." : "Channel locked"}
+            placeholder={unlocked ? t.chatInput : t.chatLocked}
             className="flex-1 bg-transparent text-sm placeholder-white/25 disabled:cursor-not-allowed"
           />
           <button
@@ -828,7 +987,7 @@ function ChatInterface({ unlocked, target, userDetails }) {
           <p className="text-xs mb-1" style={{ color: TOKENS.mist }}>
             Your private channel to the cosmos will appear here.
           </p>
-          <h3 className="font-display text-xl font-semibold mb-2">Channel locked</h3>
+          <h3 className="font-display text-xl font-semibold mb-2">{t.chatLocked}</h3>
           <p className="text-sm max-w-[260px] leading-relaxed" style={{ color: TOKENS.mist }}>
             Gather the remaining Cosmic Energy to unlock your one-time private reading.
           </p>
@@ -842,13 +1001,8 @@ function ChatInterface({ unlocked, target, userDetails }) {
    App
 --------------------------------------------------------------------------- */
 function App() {
-  // REAL APP: swap this in-memory state for
-  //   const [userDetails, setUserDetails] = useState(() => {
-  //     const saved = localStorage.getItem("astrowheel_user");
-  //     return saved ? JSON.parse(saved) : null;
-  //   });
-  // and persist with localStorage.setItem on change. Storage is disabled in
-  // this sandbox, so state resets on refresh here.
+  const [lang, setLang] = useState("en");
+  const t = TRANSLATIONS[lang];
   const [userDetails, setUserDetails] = useState(null);
   const [points, setPoints] = useState(0);
   const [target, setTarget] = useState(500);
@@ -866,7 +1020,8 @@ function App() {
   };
 
   return (
-    <div className="astrowheel-root min-h-screen w-full">
+    <LanguageContext.Provider value={{ lang, setLang, t }}>
+      <div className="astrowheel-root min-h-screen w-full">
       <GlobalStyles />
       <SpaceBackground />
 
@@ -884,6 +1039,7 @@ function App() {
         </main>
       </div>
     </div>
+    </LanguageContext.Provider>
   );
 }
 
