@@ -77,8 +77,7 @@ Do NOT use markdown headers or code blocks. Present your wisdom as elegant, insp
 def get_health():
     return {"status": "Celestial server is running", "port": 8001}
 
-# Mount static files (HTML, CSS, JS, Assets)
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
 
 if __name__ == "__main__":
     import uvicorn
