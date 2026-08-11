@@ -1,0 +1,883 @@
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import {
+  User,
+  MapPin,
+  Clock,
+  Sparkles,
+  Lock,
+  ArrowUp,
+  Star,
+  Moon,
+  Zap,
+  ArrowRight,
+} from "lucide-react";
+
+/* ============================================================================
+   ASTROWHEEL v2 — restyled to match the reference screenshots: a spare,
+   typographic hero, small-caps monospace eyebrow labels, a gold/copper +
+   deep-violet palette, and a sparse (not busy) starfield.
+
+   Implementation notes:
+   - Single-file artifact. In a real Vite project, split along the section
+     headers below into src/components/{SpaceBackground,UserDetailsModal,
+     FortuneWheel,ChatInterface}.jsx.
+   - `framer-motion` / `canvas-confetti` aren't importable in this sandbox,
+     and localStorage is disabled here — both are hand-rolled with CSS +
+     a small canvas particle system, and state lives in React only for this
+     session. Seams to swap in the real thing are marked "REAL APP:".
+   - Submit-button hardening: the modal's CTA now has BOTH a form onSubmit
+     and a button onClick fallback, validation no longer silently no-ops
+     (it shakes the invalid field and shows inline copy), and the time+AM/PM
+     pair always has a safe default so a half-filled form can't get stuck.
+   ========================================================================= */
+
+const TOKENS = {
+  void: "#07070b",
+  panel: "#0d0d16",
+  card: "#111119",
+  violet: "#8b7bff",
+  violetDim: "#4c3a8a",
+  copper: "#cf9a67",
+  gold: "#e8b866",
+  goldSoft: "#f3d9a4",
+  mist: "#7d7c8e",
+  line: "rgba(255,255,255,0.08)",
+};
+
+const SEGMENTS = [
+  { value: 500, label: "500", color: "#c9946b", weight: 1 },
+  { value: 0, label: "0", color: "#1c1a2e", weight: 22 },
+  { value: 5, label: "5", color: "#221f38", weight: 24 },
+  { value: 10, label: "10", color: "#1c1a2e", weight: 19 },
+  { value: 20, label: "20", color: "#221f38", weight: 15 },
+  { value: 50, label: "50", color: "#2a2542", weight: 10 },
+  { value: 100, label: "100", color: "#332a4f", weight: 6 },
+  { value: 200, label: "200", color: "#8b6f7a", weight: 3 },
+];
+
+const SEGMENT_ANGLE = 360 / SEGMENTS.length;
+
+function pickWeightedSegment() {
+  const total = SEGMENTS.reduce((s, seg) => s + seg.weight, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < SEGMENTS.length; i++) {
+    r -= SEGMENTS[i].weight;
+    if (r <= 0) return i;
+  }
+  return 0;
+}
+
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const a = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+}
+
+function arcPath(cx, cy, r, startAngle, endAngle) {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArc = endAngle - startAngle <= 180 ? "0" : "1";
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+}
+
+/* ---------------------------------------------------------------------------
+   Global styles
+--------------------------------------------------------------------------- */
+function GlobalStyles() {
+  return (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+      .astrowheel-root { font-family: 'Outfit', system-ui, sans-serif; color: #f0eef7; }
+      .font-display { font-family: 'Space Grotesk', 'Outfit', sans-serif; }
+      .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+      @keyframes twinkle {
+        0%, 100% { opacity: .1; }
+        50% { opacity: .9; }
+      }
+      @keyframes shootingStar {
+        0% { transform: translate(0,0) rotate(215deg); opacity: 0; }
+        4% { opacity: .9; }
+        18% { opacity: 0; }
+        100% { transform: translate(-560px, 420px) rotate(215deg); opacity: 0; }
+      }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.94) translateY(8px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+      @keyframes borderRotate {
+        0% { --a: 0deg; }
+        100% { --a: 360deg; }
+      }
+      @keyframes borderShimmer {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+      }
+      @keyframes softPulse {
+        0%, 100% { opacity: .55; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.06); }
+      }
+      @keyframes dotPulse {
+        0%, 80%, 100% { opacity: .25; transform: translateY(0); }
+        40% { opacity: 1; transform: translateY(-3px); }
+      }
+      @keyframes popIn {
+        0% { opacity: 0; transform: scale(0.5) rotate(-6deg); }
+        60% { opacity: 1; transform: scale(1.07) rotate(2deg); }
+        100% { opacity: 1; transform: scale(1) rotate(0deg); }
+      }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(5px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(3px); }
+      }
+      @keyframes ripple {
+        0% { box-shadow: 0 0 0 0 rgba(232,184,102,0.55); }
+        100% { box-shadow: 0 0 0 40px rgba(232,184,102,0); }
+      }
+      @keyframes glyphDrift {
+        0%, 100% { transform: translateY(0) rotate(0deg); opacity: .06; }
+        50% { transform: translateY(-8px) rotate(4deg); opacity: .12; }
+      }
+
+      .anim-fade-up { animation: fadeUp .7s cubic-bezier(.2,.8,.2,1) both; }
+      .anim-fade-in { animation: fadeIn .5s ease both; }
+      .anim-scale-in { animation: scaleIn .5s cubic-bezier(.2,.8,.2,1) both; }
+      .anim-pop { animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+      .anim-shake { animation: shake .45s ease; }
+      .anim-ripple { animation: ripple 1s ease-out; }
+
+      .card {
+        background: linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+        border: 1px solid ${TOKENS.line};
+      }
+      .card-blur {
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+      .text-gold { color: ${TOKENS.gold}; }
+      .text-gradient-gold {
+        background: linear-gradient(90deg, #e8b866, #f7e2b3, #e8b866);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+      .text-gradient-violet {
+        background: linear-gradient(90deg, #8b7bff, #b6a9ff);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+
+      /* clean glow border replacing the buggy mask */
+      .glow-border {
+        position: relative;
+        border-radius: 28px;
+        background: #0a0a12;
+      }
+      .glow-border::before {
+        content: '';
+        position: absolute;
+        inset: -1.5px;
+        border-radius: 29.5px;
+        background: conic-gradient(from var(--a, 0deg), rgba(232,184,102,0.9), rgba(139,123,255,0.15) 30%, rgba(139,123,255,0.7) 55%, rgba(232,184,102,0.15) 80%, rgba(232,184,102,0.9));
+        animation: borderRotate 7s linear infinite;
+        z-index: -1;
+      }
+      .btn-shimmer {
+        background: linear-gradient(90deg, #cf9a67, #e8b866, #f7e2b3, #e8b866, #cf9a67);
+        background-size: 300% 100%;
+        animation: borderShimmer 5s linear infinite;
+      }
+      .wheel-transition { transition: transform 8.5s cubic-bezier(0.1, 1, 0.1, 1); }
+      .scroll-thin::-webkit-scrollbar { width: 6px; }
+      .scroll-thin::-webkit-scrollbar-thumb { background: rgba(139,123,255,0.35); border-radius: 999px; }
+      .scroll-thin::-webkit-scrollbar-track { background: transparent; }
+
+      input:focus, button:focus, select:focus { outline: none; }
+      .input-glow { transition: box-shadow .2s ease, border-color .2s ease; }
+      .input-glow:focus-within {
+        box-shadow: 0 0 0 1px rgba(232,184,102,0.4), 0 0 18px rgba(232,184,102,0.18);
+        border-color: rgba(232,184,102,0.5) !important;
+      }
+      .input-error { border-color: rgba(244,114,182,0.6) !important; }
+
+      ::selection { background: rgba(139,123,255,0.35); }
+    `}</style>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   SpaceBackground — sparse, quiet starfield (no heavy nebula blobs)
+--------------------------------------------------------------------------- */
+function SpaceBackground() {
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 70 }, (_, i) => ({
+        id: i,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        size: Math.random() * 1.6 + 0.6,
+        delay: Math.random() * 6,
+        duration: Math.random() * 3 + 3,
+      })),
+    []
+  );
+
+  const shootingStars = useMemo(
+    () =>
+      Array.from({ length: 2 }, (_, i) => ({
+        id: i,
+        top: Math.random() * 30,
+        left: 55 + Math.random() * 35,
+        delay: i * 9 + Math.random() * 8,
+        duration: 3 + Math.random() * 1.4,
+      })),
+    []
+  );
+
+  return (
+    <div
+      className="fixed inset-0 -z-10 overflow-hidden"
+      style={{ background: `radial-gradient(ellipse at 50% 0%, ${TOKENS.panel} 0%, ${TOKENS.void} 60%, #030304 100%)` }}
+      aria-hidden="true"
+    >
+      {stars.map((s) => (
+        <div
+          key={s.id}
+          className="absolute rounded-full bg-white"
+          style={{
+            top: `${s.top}%`,
+            left: `${s.left}%`,
+            width: s.size,
+            height: s.size,
+            animation: `twinkle ${s.duration}s ease-in-out infinite`,
+            animationDelay: `${s.delay}s`,
+          }}
+        />
+      ))}
+      {shootingStars.map((s) => (
+        <div key={s.id} className="absolute" style={{ top: `${s.top}%`, left: `${s.left}%`, animation: `shootingStar ${s.duration}s linear infinite`, animationDelay: `${s.delay}s` }}>
+          <div style={{ width: 80, height: 1.5, background: "linear-gradient(90deg, rgba(255,255,255,0.9), transparent)", borderRadius: 999 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Confetti — canvas particle burst (stand-in for canvas-confetti)
+--------------------------------------------------------------------------- */
+function useConfetti() {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = document.createElement("canvas");
+    Object.assign(canvas.style, { position: "fixed", inset: "0", width: "100vw", height: "100vh", pointerEvents: "none", zIndex: "9999" });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+    canvasRef.current = canvas;
+    const onResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    window.addEventListener("resize", onResize);
+    return () => { window.removeEventListener("resize", onResize); canvas.remove(); };
+  }, []);
+
+  return useCallback((originX, originY) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const colors = [TOKENS.violet, TOKENS.gold, TOKENS.copper, "#ffffff"];
+    const particles = Array.from({ length: 90 }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 4 + Math.random() * 9;
+      return { x: originX, y: originY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 3, g: 0.22, size: 3 + Math.random() * 4, color: colors[Math.floor(Math.random() * colors.length)], life: 60 + Math.random() * 30, rot: Math.random() * 360, spin: (Math.random() - 0.5) * 20 };
+    });
+    function tick() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      particles.forEach((p) => {
+        if (p.life <= 0) return;
+        alive = true;
+        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.spin; p.life -= 1;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.rot * Math.PI) / 180);
+        ctx.globalAlpha = Math.max(p.life / 90, 0); ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        ctx.restore();
+      });
+      if (alive) requestAnimationFrame(tick); else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    tick();
+  }, []);
+}
+
+/* ---------------------------------------------------------------------------
+   UserDetailsModal — glowing conic-gradient border, mono eyebrow, staggered
+   field entrance, hardened submit (button has onClick AND form onSubmit).
+--------------------------------------------------------------------------- */
+const ZODIAC_GLYPHS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
+
+function UserDetailsModal({ onSubmit }) {
+  const [name, setName] = useState("");
+  const [place, setPlace] = useState("");
+  const [time, setTime] = useState("");
+  const [ampm, setAmpm] = useState("AM");
+  const [errors, setErrors] = useState({});
+  const [shakeKey, setShakeKey] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  const glyphs = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, i) => ({
+        id: i,
+        glyph: ZODIAC_GLYPHS[Math.floor(Math.random() * ZODIAC_GLYPHS.length)],
+        top: Math.random() * 90 + 5,
+        left: Math.random() * 90 + 5,
+        size: 20 + Math.random() * 26,
+        delay: Math.random() * 4,
+        duration: 5 + Math.random() * 3,
+      })),
+    []
+  );
+
+  const validate = () => {
+    const next = {};
+    if (!name.trim()) next.name = true;
+    if (!place.trim()) next.place = true;
+    if (!time.trim()) next.time = true;
+    return next;
+  };
+
+  const attemptSubmit = () => {
+    if (submitting) return;
+    const next = validate();
+    setErrors(next);
+    if (Object.keys(next).length > 0) {
+      setShakeKey((k) => k + 1);
+      return;
+    }
+    setSubmitting(true);
+    // brief ripple/settle beat before handing off, purely for polish
+    window.setTimeout(() => {
+      onSubmit({ name: name.trim(), place: place.trim(), time, ampm: ampm || "AM" });
+    }, 420);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    attemptSubmit();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 anim-fade-in">
+      <div className="absolute inset-0" style={{ background: "rgba(4,4,7,0.78)", backdropFilter: "blur(6px)" }} />
+
+      <div
+        key={shakeKey}
+        className={`glow-border relative w-full max-w-md anim-scale-in ${shakeKey ? "anim-shake" : ""}`}
+        style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }}
+      >
+        <div
+          className="relative rounded-[28px] overflow-hidden p-8 sm:p-10"
+          style={{ background: `linear-gradient(180deg, ${TOKENS.card}, #0a0a12)` }}
+        >
+          {/* faint drifting zodiac glyphs for texture */}
+          {glyphs.map((g) => (
+            <span
+              key={g.id}
+              className="absolute font-display pointer-events-none select-none"
+              style={{
+                top: `${g.top}%`,
+                left: `${g.left}%`,
+                fontSize: g.size,
+                color: TOKENS.goldSoft,
+                animation: `glyphDrift ${g.duration}s ease-in-out infinite`,
+                animationDelay: `${g.delay}s`,
+              }}
+            >
+              {g.glyph}
+            </span>
+          ))}
+
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-5 anim-fade-up" style={{ animationDelay: "0s" }}>
+              <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
+              <span className="font-mono text-[11px] uppercase tracking-[0.22em]" style={{ color: TOKENS.gold }}>
+                Celestial Intake
+              </span>
+            </div>
+
+            <h1 className="font-display text-3xl sm:text-[2.15rem] font-semibold leading-tight tracking-tight anim-fade-up" style={{ animationDelay: ".05s" }}>
+              Chart your <span className="text-gradient-gold">path.</span>
+            </h1>
+            <p className="text-sm mt-2.5 mb-8 leading-relaxed anim-fade-up" style={{ color: TOKENS.mist, animationDelay: ".1s" }}>
+              Three details, and the stars will begin aligning your reading.
+            </p>
+
+            <div className="space-y-4">
+              <label className="block anim-fade-up" style={{ animationDelay: ".15s" }}>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
+                  Full Name
+                </span>
+                <div
+                  className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.name ? "input-error" : "border-white/10"}`}
+                >
+                  <User className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                  <input
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((er) => ({ ...er, name: false })); }}
+                    placeholder="e.g. Aria Nightingale"
+                    className="w-full bg-transparent text-sm placeholder-white/25"
+                  />
+                </div>
+              </label>
+
+              <label className="block anim-fade-up" style={{ animationDelay: ".2s" }}>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
+                  Place of Birth
+                </span>
+                <div
+                  className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.place ? "input-error" : "border-white/10"}`}
+                >
+                  <MapPin className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                  <input
+                    value={place}
+                    onChange={(e) => { setPlace(e.target.value); if (errors.place) setErrors((er) => ({ ...er, place: false })); }}
+                    placeholder="e.g. Pune, India"
+                    className="w-full bg-transparent text-sm placeholder-white/25"
+                  />
+                </div>
+              </label>
+
+              <label className="block anim-fade-up" style={{ animationDelay: ".25s" }}>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
+                  Time of Birth
+                </span>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div
+                    className={`input-glow flex-1 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.time ? "input-error" : "border-white/10"}`}
+                  >
+                    <Clock className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                    <input
+                      type="time"
+                      value={time}
+                      onChange={(e) => { setTime(e.target.value); if (errors.time) setErrors((er) => ({ ...er, time: false })); }}
+                      className="w-full bg-transparent text-sm"
+                    />
+                  </div>
+                  <select
+                    value={ampm}
+                    onChange={(e) => setAmpm(e.target.value)}
+                    className="input-glow rounded-xl px-3 py-3 bg-black/30 border border-white/10 text-sm"
+                  >
+                    <option>AM</option>
+                    <option>PM</option>
+                  </select>
+                </div>
+              </label>
+
+              {Object.keys(errors).some((k) => errors[k]) && (
+                <p className="text-xs pl-1" style={{ color: "#f472b6" }}>
+                  Fill in every field so the stars have something to work with.
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={attemptSubmit}
+              disabled={submitting}
+              className="btn-shimmer w-full mt-8 rounded-xl py-3.5 font-display font-semibold text-sm tracking-wide text-black flex items-center justify-center gap-2 transition-transform active:scale-[0.98] hover:brightness-105 disabled:opacity-70 anim-fade-up"
+              style={{ animationDelay: ".3s", boxShadow: "0 10px 30px rgba(232,184,102,0.25)" }}
+            >
+              {submitting ? (
+                <>
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+                  Aligning the stars...
+                </>
+              ) : (
+                <>
+                  Reveal My Path
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+        {/* invisible submit-on-enter helper, mirrors handleFormSubmit for keyboard users */}
+        <form onSubmit={handleFormSubmit} className="sr-only" aria-hidden="true">
+          <button type="submit">submit</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Header — logo + scoreboard (matches reference: lightning icon, mono label)
+--------------------------------------------------------------------------- */
+function Header({ points, target }) {
+  const pct = Math.min(100, (points / target) * 100);
+  return (
+    <header className="anim-fade-up">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-7 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
+          <span className="font-display text-lg font-semibold tracking-tight">
+            Astro<span className="text-gold">Wheel</span>
+          </span>
+        </div>
+
+        <div className="card rounded-2xl px-4 sm:px-5 py-3 min-w-[170px] sm:min-w-[220px]">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
+              <Zap className="w-3 h-3" style={{ color: TOKENS.gold }} />
+              Cosmic Energy
+            </div>
+            <div className="font-mono text-xs">
+              <span className="text-gold font-semibold">{points}</span>
+              <span style={{ color: TOKENS.mist }}> / {target}</span>
+            </div>
+          </div>
+          <div className="h-[3px] rounded-full bg-white/10 mt-2.5 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700 ease-out"
+              style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${TOKENS.copper}, ${TOKENS.gold})` }}
+            />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Hero — typographic intro matching the reference
+--------------------------------------------------------------------------- */
+function Hero() {
+  return (
+    <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-10 sm:pb-14 anim-fade-up" style={{ animationDelay: ".05s" }}>
+      <div className="flex items-center gap-2 mb-4">
+        <span className="font-mono text-[11px] uppercase tracking-[0.24em]" style={{ color: TOKENS.gold }}>
+          Your Celestial Playground
+        </span>
+      </div>
+      <h1 className="font-display font-semibold leading-[1.05] tracking-tight text-4xl sm:text-6xl">
+        Spin the cosmos.
+        <br />
+        <span className="text-gradient-violet">Read your path.</span>
+      </h1>
+      <p className="text-sm sm:text-base mt-5 max-w-md leading-relaxed" style={{ color: TOKENS.mist }}>
+        Gather energy from the stars to unlock a private reading with your AI Astrologer.
+      </p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   FortuneWheel
+--------------------------------------------------------------------------- */
+function FortuneWheel({ onWin, spinsUsed }) {
+  const [rotation, setRotation] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+  const [lastWin, setLastWin] = useState(null);
+  const wheelBtnRef = useRef(null);
+  const confettiBurst = useConfetti();
+
+  const size = 320;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - 10;
+
+  const handleSpin = () => {
+    if (spinning) return;
+    setSpinning(true);
+    setLastWin(null);
+
+    const winnerIndex = pickWeightedSegment();
+    const segCenter = winnerIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+    const fullSpins = 6 + Math.floor(Math.random() * 3);
+    const currentMod = ((rotation % 360) + 360) % 360;
+    const targetMod = (360 - segCenter) % 360;
+    let delta = targetMod - currentMod;
+    if (delta < 0) delta += 360;
+    const nextRotation = rotation + fullSpins * 360 + delta;
+    setRotation(nextRotation);
+
+    window.setTimeout(() => {
+      setSpinning(false);
+      const won = SEGMENTS[winnerIndex].value;
+      setLastWin(won);
+      if (won > 0 && wheelBtnRef.current) {
+        const rect = wheelBtnRef.current.getBoundingClientRect();
+        confettiBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
+      onWin(won);
+    }, 8600);
+  };
+
+  return (
+    <div className="card card-blur rounded-3xl p-6 sm:p-8 flex flex-col items-center anim-fade-up" style={{ animationDelay: ".1s" }}>
+      <div className="self-start mb-8 font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color: TOKENS.mist }}>
+        The Fortune Wheel <span style={{ color: TOKENS.gold }}>· 08 Orbits</span>
+      </div>
+
+      <div className="relative" style={{ width: size, height: size }}>
+        <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: -14 }}>
+          <div style={{ width: 0, height: 0, borderLeft: "10px solid transparent", borderRight: "10px solid transparent", borderTop: `18px solid ${TOKENS.gold}`, filter: "drop-shadow(0 0 6px rgba(232,184,102,0.7))" }} />
+        </div>
+
+        <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle, rgba(139,123,255,0.2) 0%, transparent 70%)", animation: spinning ? "softPulse 0.8s infinite alternate" : "softPulse 4s infinite alternate", transform: "scale(1.2)", zIndex: -1 }}></div>
+        
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="wheel-transition" style={{ transform: `rotate(${rotation}deg)`, filter: "drop-shadow(0 0 22px rgba(232,184,102,0.22))" }}>
+          <defs>
+            <radialGradient id="segmentShadow" cx="50%" cy="50%" r="50%">
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.45" />
+            </radialGradient>
+            <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="85%" stopColor={TOKENS.goldSoft} />
+              <stop offset="100%" stopColor={TOKENS.copper} />
+            </radialGradient>
+          </defs>
+          <circle cx={cx} cy={cy} r={r + 6} fill="none" stroke="url(#ringGlow)" strokeWidth="4" opacity="0.95" />
+          <circle cx={cx} cy={cy} r={r + 2} fill="#0b0a12" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+          {SEGMENTS.map((seg, i) => {
+            const start = i * SEGMENT_ANGLE;
+            const end = start + SEGMENT_ANGLE;
+            const mid = start + SEGMENT_ANGLE / 2;
+            const labelPos = polarToCartesian(cx, cy, r * 0.62, mid);
+            const pathD = arcPath(cx, cy, r, start, end);
+            return (
+              <g key={i}>
+                <path d={pathD} fill={seg.color} stroke="rgba(0,0,0,0.4)" strokeWidth="1" />
+                <path d={pathD} fill="url(#segmentShadow)" pointerEvents="none" />
+                <text
+                  x={labelPos.x}
+                  y={labelPos.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontFamily="Space Grotesk"
+                  fontWeight="600"
+                  fontSize={seg.value >= 200 ? 17 : 15}
+                  fill={seg.value >= 200 ? "#1c1420" : "#f0eef7"}
+                >
+                  {seg.label}
+                </text>
+              </g>
+            );
+          })}
+          <circle cx={cx} cy={cy} r={r * 0.24} fill="#0b0a12" stroke={TOKENS.gold} strokeWidth="2" />
+        </svg>
+
+        <button
+          ref={wheelBtnRef}
+          onClick={handleSpin}
+          disabled={spinning}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full font-display font-bold text-xs tracking-widest flex items-center justify-center transition-transform active:scale-95 disabled:cursor-not-allowed z-10"
+          style={{
+            width: size * 0.2,
+            height: size * 0.2,
+            background: "#0b0a12",
+            border: `2px solid ${TOKENS.gold}`,
+            color: TOKENS.gold,
+            boxShadow: spinning ? "0 0 16px rgba(232,184,102,0.4)" : "0 0 22px rgba(232,184,102,0.55)",
+          }}
+        >
+          {spinning ? <span className="animate-spin"><Sparkles className="w-5 h-5" /></span> : "SPIN"}
+        </button>
+      </div>
+
+      <div className="mt-6 h-8 flex items-center">
+        {lastWin !== null && (
+          <div key={Date.now()} className="anim-pop flex items-center gap-2">
+            <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
+            <span className="font-display text-sm">
+              {lastWin > 0 ? (
+                <>You channeled <span className="text-gradient-gold font-semibold">+{lastWin} energy</span></>
+              ) : (
+                <span style={{ color: TOKENS.mist }}>The stars stayed silent. Try again.</span>
+              )}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   ChatInterface
+--------------------------------------------------------------------------- */
+const MYSTIC_REPLIES = [
+  "The alignment of Jupiter suggests a season of expansion is opening for you — say yes to the opportunity that feels slightly too big.",
+  "Your Moon is whispering about rest. The next few days favor reflection over action, even if your calendar disagrees.",
+  "Mercury's current path favors honest conversations. Something you've been holding back is ready to be said.",
+  "There's a Venus influence around close relationships this week — old bonds may resurface, asking to be renewed or released.",
+  "Saturn's discipline is on your side right now. A structure you build this month will still be standing a year from now.",
+];
+
+function ChatInterface({ unlocked, target, userName }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef(null);
+  const prevUnlocked = useRef(false);
+
+  useEffect(() => {
+    if (unlocked && !prevUnlocked.current) {
+      setMessages((m) => [...m, { role: "ai", text: `The veil lifts, ${userName || "seeker"}. Your energy has reached ${target}. Ask your question.` }]);
+    }
+    prevUnlocked.current = unlocked;
+  }, [unlocked, target, userName]);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    if (!input.trim() || loading || !unlocked) return;
+    setMessages((m) => [...m, { role: "user", text: input.trim() }]);
+    setInput("");
+    setLoading(true);
+
+    // REAL APP: replace this timeout with a fetch to your AI Astrologer backend:
+    // const res = await fetch("/api/astrologer", { method: "POST", headers: {...}, body: JSON.stringify({ message, birthDetails }) });
+    // const data = await res.json(); setMessages((m) => [...m, { role: "ai", text: data.reply }]);
+    window.setTimeout(() => {
+      const reply = MYSTIC_REPLIES[Math.floor(Math.random() * MYSTIC_REPLIES.length)];
+      setMessages((m) => [...m, { role: "ai", text: reply }]);
+      setLoading(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="relative card card-blur rounded-3xl overflow-hidden flex flex-col h-[500px] anim-fade-up" style={{ animationDelay: ".15s" }}>
+      <div className="flex items-center gap-3 px-5 py-4 border-b shrink-0" style={{ borderColor: TOKENS.line }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(139,123,255,0.12)", border: `1px solid ${TOKENS.violet}55` }}>
+          <Moon className="w-4 h-4" style={{ color: TOKENS.violet }} />
+        </div>
+        <div className="flex-1">
+          <h2 className="font-display text-sm font-semibold">AI Astrologer</h2>
+          <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: TOKENS.mist }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: unlocked ? "#4ade80" : TOKENS.mist }} />
+            Your Celestial Guide
+          </div>
+        </div>
+        <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
+      </div>
+
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scroll-thin px-5 py-4 space-y-3">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} anim-fade-in`}>
+            <div
+              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "rounded-br-sm" : "rounded-bl-sm"}`}
+              style={m.role === "user" ? { background: TOKENS.violet, color: "#0b0a12", fontWeight: 500 } : { background: "rgba(255,255,255,0.05)", border: `1px solid ${TOKENS.line}` }}
+            >
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${TOKENS.line}` }}>
+              {[0, 1, 2].map((d) => (
+                <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/70" style={{ animation: "dotPulse 1.2s ease-in-out infinite", animationDelay: `${d * 0.15}s` }} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <form onSubmit={handleSend} className="p-4 border-t shrink-0" style={{ borderColor: TOKENS.line }}>
+        <div className="input-glow flex items-center gap-2 rounded-xl px-3 py-2.5 bg-black/30 border border-white/10">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={!unlocked}
+            placeholder={unlocked ? "Ask about your path..." : "Channel locked"}
+            className="flex-1 bg-transparent text-sm placeholder-white/25 disabled:cursor-not-allowed"
+          />
+          <button
+            type="submit"
+            disabled={!unlocked || !input.trim() || loading}
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-30 transition-transform active:scale-90"
+            style={{ background: TOKENS.gold, color: "#0b0a12" }}
+          >
+            <ArrowUp className="w-4 h-4" />
+          </button>
+        </div>
+      </form>
+
+      {!unlocked && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center text-center px-10"
+          style={{ backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", background: "rgba(7,7,11,0.55)" }}
+        >
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ border: `1px solid ${TOKENS.gold}66`, background: "rgba(232,184,102,0.06)" }}>
+            <Lock className="w-6 h-6" style={{ color: TOKENS.gold }} />
+          </div>
+          <p className="text-xs mb-1" style={{ color: TOKENS.mist }}>
+            Your private channel to the cosmos will appear here.
+          </p>
+          <h3 className="font-display text-xl font-semibold mb-2">Channel locked</h3>
+          <p className="text-sm max-w-[260px] leading-relaxed" style={{ color: TOKENS.mist }}>
+            Gather the remaining Cosmic Energy to unlock your one-time private reading.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   App
+--------------------------------------------------------------------------- */
+export default function App() {
+  // REAL APP: swap this in-memory state for
+  //   const [userDetails, setUserDetails] = useState(() => {
+  //     const saved = localStorage.getItem("astrowheel_user");
+  //     return saved ? JSON.parse(saved) : null;
+  //   });
+  // and persist with localStorage.setItem on change. Storage is disabled in
+  // this sandbox, so state resets on refresh here.
+  const [userDetails, setUserDetails] = useState(null);
+  const [points, setPoints] = useState(0);
+  const [target, setTarget] = useState(500);
+  const [spinsUsed, setSpinsUsed] = useState(0);
+  const [unlocked, setUnlocked] = useState(false);
+
+  const handleWin = (won) => {
+    setSpinsUsed((s) => s + 1);
+    const nextPoints = points + won;
+    setPoints(nextPoints);
+    if (nextPoints >= target && !unlocked) {
+      setUnlocked(true);
+      setTarget((t) => t + 500); // next milestone: 500 -> 1000 -> 1500 ...
+    }
+  };
+
+  return (
+    <div className="astrowheel-root min-h-screen w-full">
+      <GlobalStyles />
+      <SpaceBackground />
+
+      {!userDetails && <UserDetailsModal onSubmit={setUserDetails} />}
+
+      <div className={userDetails ? "" : "pointer-events-none blur-sm select-none"}>
+        <Header points={points} target={target} />
+        <Hero />
+
+        <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 items-start">
+            <FortuneWheel onWin={handleWin} spinsUsed={spinsUsed} />
+            <ChatInterface unlocked={unlocked} target={target} userName={userDetails?.name?.split(" ")[0]} />
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
