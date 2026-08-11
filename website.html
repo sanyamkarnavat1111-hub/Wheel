@@ -1,4 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstroWheel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-[#07070b]">
+  <div id="root"></div>
+  <script type="text/babel" data-type="module">
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { createRoot } from "react-dom/client";
 import {
   User,
   MapPin,
@@ -851,7 +873,7 @@ function ChatInterface({ unlocked, target, userDetails }) {
 /* ---------------------------------------------------------------------------
    App
 --------------------------------------------------------------------------- */
-export default function App() {
+function App() {
   // REAL APP: swap this in-memory state for
   //   const [userDetails, setUserDetails] = useState(() => {
   //     const saved = localStorage.getItem("astrowheel_user");
@@ -896,3 +918,9 @@ export default function App() {
     </div>
   );
 }
+
+const root = createRoot(document.getElementById("root"));
+root.render(<App />);
+  </script>
+</body>
+</html>
