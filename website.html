@@ -339,8 +339,6 @@ function useConfetti() {
    UserDetailsModal — glowing conic-gradient border, mono eyebrow, staggered
    field entrance, hardened submit (button has onClick AND form onSubmit).
 --------------------------------------------------------------------------- */
-const ZODIAC_GLYPHS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
-
 function UserDetailsModal({ onSubmit }) {
   const [name, setName] = useState("");
   const [place, setPlace] = useState("");
@@ -349,20 +347,6 @@ function UserDetailsModal({ onSubmit }) {
   const [errors, setErrors] = useState({});
   const [shakeKey, setShakeKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-
-  const glyphs = useMemo(
-    () =>
-      Array.from({ length: 8 }, (_, i) => ({
-        id: i,
-        glyph: ZODIAC_GLYPHS[Math.floor(Math.random() * ZODIAC_GLYPHS.length)],
-        top: Math.random() * 90 + 5,
-        left: Math.random() * 90 + 5,
-        size: 20 + Math.random() * 26,
-        delay: Math.random() * 4,
-        duration: 5 + Math.random() * 3,
-      })),
-    []
-  );
 
   const validate = () => {
     const next = {};
@@ -405,24 +389,6 @@ function UserDetailsModal({ onSubmit }) {
           className="relative rounded-[28px] overflow-hidden p-8 sm:p-10"
           style={{ background: `linear-gradient(180deg, ${TOKENS.card}, #0a0a12)` }}
         >
-          {/* faint drifting zodiac glyphs for texture */}
-          {glyphs.map((g) => (
-            <span
-              key={g.id}
-              className="absolute font-display pointer-events-none select-none"
-              style={{
-                top: `${g.top}%`,
-                left: `${g.left}%`,
-                fontSize: g.size,
-                color: TOKENS.goldSoft,
-                animation: `glyphDrift ${g.duration}s ease-in-out infinite`,
-                animationDelay: `${g.delay}s`,
-              }}
-            >
-              {g.glyph}
-            </span>
-          ))}
-
           <div className="relative">
             <div className="flex items-center gap-2 mb-5">
               <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
