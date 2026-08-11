@@ -1,11 +1,11 @@
 /* ==========================================================================
-   COSMIC KUNDALI FORTUNE WHEEL - CORE ENGINE & GAME LOGIC
+   STITCH MCP COSMIC KUNDALI FORTUNE WHEEL - CORE ENGINE (3D THREE.JS & WEBGL)
    ========================================================================== */
 
-// --- 1. MULTI-LANGUAGE DICTIONARY Engine (i18n) ---
+// --- 1. MULTI-LANGUAGE DICTIONARY ENGINE (i18n) ---
 const i18n = {
     English: {
-        appTitle: "KUNDALI COSMIC WHEEL",
+        appTitle: "COSMIC KUNDALI",
         points: "PTS",
         birthDetailsBtn: "Birth Details",
         wheelTitle: "Spin the Cosmic Wheel",
@@ -35,11 +35,11 @@ const i18n = {
         targetLevelLabel: "Target: {target} PTS"
     },
     Hindi: {
-        appTitle: "कुंडली कॉस्मिक व्हील",
+        appTitle: "कुंडली कॉस्मिक चक्र",
         points: "अंक",
         birthDetailsBtn: "जन्म विवरण",
         wheelTitle: "कॉस्मिक चक्र घुमाएं",
-        wheelSubtitle: "गुरुजी के दिव्य फलादेश अनलॉक करने के लिए दिव्य ऊर्जा एकत्र करें",
+        wheelSubtitle: "गुरुजी के दिव्य फलादेश अनलॉक करने के लिए ऊर्जा एकत्र करें",
         chatLocked: "एआई ज्योतिषी चैट बंद है",
         chatUnlocked: "एआई ज्योतिषी चैट अनलॉक!",
         openChatBtn: "गुरुजी से परामर्श लें",
@@ -56,8 +56,8 @@ const i18n = {
         saveDetailsBtn: "विवरण सहेजें और ग्रह संरेखित करें",
         chatModalTitle: "गुरुजी के साथ दिव्य परामर्श",
         statusConnected: "दिव्य द्वार सक्रिय (1 प्रश्न अनलॉक)",
-        guruGreeting: "प्रणाम साधक! आपने अपना दिव्य फलादेश अनलॉक कर लिया है। विवाह, करियर, भाग्य, स्वास्थ्य या प्रेम के बारे में अपना 1 प्रश्न पूछें।",
-        questionPlaceholder: "अपना प्रश्न यहाँ लिखें (जैसे: मुझे मनचाही नौकरी कब मिलेगी?)...",
+        guruGreeting: "प्रणाम साधक! आपने अपना दिव्य फलादेश अनलॉक कर लिया है। विवाह, करियर, भाग्य या प्रेम का प्रश्न पूछें।",
+        questionPlaceholder: "अपना प्रश्न यहाँ लिखें...",
         askBtn: "गुरुजी से पूछें",
         readingCompleteTitle: "एकल फलादेश पूर्ण!",
         readingCompleteDesc: "आपका अगला लक्ष्य {target} अंक है। अगला परामर्श अनलॉक करने के लिए चक्र घुमाएं।",
@@ -69,9 +69,9 @@ const i18n = {
         points: "गुण",
         birthDetailsBtn: "जन्म तपशील",
         wheelTitle: "कॉस्मिक चक्र फिरवा",
-        wheelSubtitle: "गुरुजींचे मार्गदर्शन अनलॉक करण्यासाठी ऊर्जा गोळा करा",
-        chatLocked: "एआय ज्योतिषी चॅट लॉक आहे",
-        chatUnlocked: "एआय ज्योतिषी चॅट अनलॉक!",
+        wheelSubtitle: "मार्गदर्शन अनलॉक करण्यासाठी ऊर्जा गोळा करा",
+        chatLocked: "चॅट लॉक आहे",
+        chatUnlocked: "चॅट अनलॉक!",
         openChatBtn: "गुरुजींचा सल्ला घ्या",
         lastWin: "शेवटचा निकाल:",
         readyToSpin: "चक्र फिरवून सुरुवात करा!",
@@ -82,10 +82,10 @@ const i18n = {
         labelPlace: "जन्मस्थान",
         labelDOB: "जन्म तारीख",
         dobHelp: "1940 ते 2026 थेट वर्ष निवडा.",
-        labelTOB: "जन्म वेळ (12 तास स्वरूप)",
+        labelTOB: "जन्म वेळ (12 तास)",
         saveDetailsBtn: "तपशील जतन करा",
         chatModalTitle: "गुरुजींशी संवाद",
-        statusConnected: "पोर्टल सक्रिय (1 प्रश्न अनलॉक)",
+        statusConnected: "सक्रिय (1 प्रश्न)",
         guruGreeting: "नमस्कार! तुमचा 1 प्रश्न विचारा.",
         questionPlaceholder: "तुमचा प्रश्न येथे लिहा...",
         askBtn: "विचार करा",
@@ -99,7 +99,7 @@ const i18n = {
         points: "પોઇન્ટ્સ",
         birthDetailsBtn: "જન્મ વિગત",
         wheelTitle: "ચક્ર ફેરવો",
-        wheelSubtitle: "ગુરુજીનું માર્ગદર્શન અનલૉક કરવા પોઇન્ટ્સ એકત્રિત કરો",
+        wheelSubtitle: "માર્ગદર્શન અનલૉક કરવા પોઇન્ટ્સ એકત્રિત કરો",
         chatLocked: "ચેટ લૉક છે",
         chatUnlocked: "ચેટ અનલૉક!",
         openChatBtn: "ગુરુજી સાથે વાત કરો",
@@ -127,10 +127,10 @@ const i18n = {
     Spanish: {
         appTitle: "RUEDA CÓSMICA KUNDALI",
         points: "PTS",
-        birthDetailsBtn: "Datos de Nacimiento",
+        birthDetailsBtn: "Nacimiento",
         wheelTitle: "Gira la Rueda Cósmica",
         wheelSubtitle: "Reúne energía celestial para desbloquear a Guruji",
-        chatLocked: "Chat de Astrólogo Bloqueado",
+        chatLocked: "Chat Bloqueado",
         chatUnlocked: "¡Chat Desbloqueado!",
         openChatBtn: "Consultar a Guruji",
         lastWin: "Último Resultado:",
@@ -141,13 +141,13 @@ const i18n = {
         labelName: "Nombre Completo",
         labelPlace: "Lugar de Nacimiento",
         labelDOB: "Fecha de Nacimiento",
-        dobHelp: "Selecciona directamente tu año de nacimiento (1940-2026).",
+        dobHelp: "Selecciona tu año de nacimiento de 1940 a 2026.",
         labelTOB: "Hora de Nacimiento (12 Horas)",
         saveDetailsBtn: "Guardar Datos",
         chatModalTitle: "Consulta con Guruji",
         statusConnected: "Portal Activo (1 Pregunta)",
-        guruGreeting: "¡Saludos! Has desbloqueado tu lectura divina. Haz tu pregunta principal.",
-        questionPlaceholder: "Escribe tu pregunta aquí...",
+        guruGreeting: "¡Saludos! Haz tu pregunta principal.",
+        questionPlaceholder: "Escribe tu pregunta...",
         askBtn: "Preguntar",
         readingCompleteTitle: "¡Lectura Completada!",
         readingCompleteDesc: "Tu próximo objetivo es {target} Puntos.",
@@ -159,8 +159,8 @@ const i18n = {
         points: "PTS",
         birthDetailsBtn: "Naissance",
         wheelTitle: "Tournez la Roue Cosmique",
-        wheelSubtitle: "Rassemblez de l'énergie céleste pour consulter Guruji",
-        chatLocked: "Chat Astrologue Verrouillé",
+        wheelSubtitle: "Rassemblez de l'énergie céleste",
+        chatLocked: "Chat Verrouillé",
         chatUnlocked: "Chat Déverrouillé!",
         openChatBtn: "Consulter Guruji",
         lastWin: "Dernier Résultat:",
@@ -176,7 +176,7 @@ const i18n = {
         saveDetailsBtn: "Enregistrer",
         chatModalTitle: "Consultation avec Guruji",
         statusConnected: "Portail Actif (1 Question)",
-        guruGreeting: "Bienvenue! Posez votre unique question essentielle.",
+        guruGreeting: "Bienvenue! Posez votre question.",
         questionPlaceholder: "Posez votre question...",
         askBtn: "Demander",
         readingCompleteTitle: "Lecture Terminée!",
@@ -188,7 +188,7 @@ const i18n = {
 
 let currentLanguage = "English";
 
-// --- 2. GAME STATEpersisted in localStorage ---
+// --- 2. GAME STATE PERSISTED IN LOCALSTORAGE ---
 let gameState = {
     points: 0,
     targetPoints: 500,
@@ -214,97 +214,89 @@ function saveGameState() {
     localStorage.setItem("kundali_game_state", JSON.stringify(gameState));
 }
 
-// --- 3. DYNAMIC STARFIELD & SHOOTING STARS CANVAS ENGINE ---
-function initStarfield() {
-    const canvas = document.getElementById("starfield-canvas");
-    const ctx = canvas.getContext("2d");
-    let width, height;
+// --- 3. STITCH MCP WEBGL COSMIC NEBULA SHADER ENGINE ---
+function initStitchCosmicShader() {
+    const canvas = document.getElementById('shader-canvas-cosmic');
+    if (!canvas) return;
 
-    function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener("resize", resize);
-
-    const stars = [];
-    const numStars = 140;
-
-    for (let i = 0; i < numStars; i++) {
-        stars.push({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            radius: Math.random() * 1.5 + 0.5,
-            alpha: Math.random(),
-            speed: Math.random() * 0.02 + 0.005,
-            hue: Math.random() > 0.8 ? "#ffd700" : (Math.random() > 0.5 ? "#a855f7" : "#ffffff")
-        });
-    }
-
-    const shootingStars = [];
-
-    function spawnShootingStar() {
-        shootingStars.push({
-            x: Math.random() * width * 0.8,
-            y: Math.random() * height * 0.4,
-            length: Math.random() * 80 + 40,
-            speed: Math.random() * 10 + 12,
-            angle: Math.PI / 4,
-            alpha: 1
-        });
-        setTimeout(spawnShootingStar, Math.random() * 4000 + 3000);
-    }
-    setTimeout(spawnShootingStar, 2000);
-
-    function animate() {
-        ctx.clearRect(0, 0, width, height);
-
-        // Draw Twinkling Stars
-        stars.forEach(s => {
-            s.alpha += s.speed;
-            if (s.alpha > 1 || s.alpha < 0.2) s.speed = -s.speed;
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-            ctx.fillStyle = s.hue;
-            ctx.globalAlpha = Math.max(0, Math.min(1, s.alpha));
-            ctx.fill();
-        });
-
-        // Draw Shooting Stars
-        ctx.globalAlpha = 1;
-        for (let i = shootingStars.length - 1; i >= 0; i--) {
-            const ss = shootingStars[i];
-            ss.x += Math.cos(ss.angle) * ss.speed;
-            ss.y += Math.sin(ss.angle) * ss.speed;
-            ss.alpha -= 0.015;
-
-            if (ss.alpha <= 0) {
-                shootingStars.splice(i, 1);
-                continue;
-            }
-
-            const grad = ctx.createLinearGradient(
-                ss.x, ss.y,
-                ss.x - Math.cos(ss.angle) * ss.length,
-                ss.y - Math.sin(ss.angle) * ss.length
-            );
-            grad.addColorStop(0, "rgba(255, 255, 255, " + ss.alpha + ")");
-            grad.addColorStop(1, "rgba(255, 215, 0, 0)");
-
-            ctx.beginPath();
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = 2;
-            ctx.moveTo(ss.x, ss.y);
-            ctx.lineTo(
-                ss.x - Math.cos(ss.angle) * ss.length,
-                ss.y - Math.sin(ss.angle) * ss.length
-            );
-            ctx.stroke();
+    function syncSize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        if (canvas.width !== w || canvas.height !== h) {
+            canvas.width = w;
+            canvas.height = h;
         }
-
-        requestAnimationFrame(animate);
     }
-    animate();
+    syncSize();
+    window.addEventListener('resize', syncSize);
+
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return;
+
+    const vs = `
+        attribute vec2 a_position;
+        varying vec2 v_texCoord;
+        void main() {
+            v_texCoord = a_position * 0.5 + 0.5;
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    `;
+
+    const fs = `
+        precision highp float;
+        varying vec2 v_texCoord;
+        uniform float u_time;
+        uniform vec2 u_resolution;
+
+        void main() {
+            vec2 uv = v_texCoord;
+            vec3 color1 = vec3(0.04, 0.02, 0.12); // Deep space purple
+            vec3 color2 = vec3(0.01, 0.01, 0.05); // Deep void black
+            vec3 gold = vec3(1.0, 0.84, 0.3);     // Luminous golden dust
+
+            float noise = sin(uv.x * 6.0 + u_time * 0.4) * cos(uv.y * 6.0 - u_time * 0.2);
+            vec3 bg = mix(color1, color2, noise * 0.5 + 0.5);
+
+            // Twinkling stars
+            float stars = pow(abs(sin(uv.x * 120.0 + u_time * 0.1) * sin(uv.y * 120.0 - u_time * 0.1)), 24.0);
+            bg += stars * gold * 0.7;
+
+            gl_FragColor = vec4(bg, 1.0);
+        }
+    `;
+
+    function compileShader(type, src) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, src);
+        gl.compileShader(shader);
+        return shader;
+    }
+
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, vs));
+    gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+    
+    const posLoc = gl.getAttribLocation(prog, 'a_position');
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    const uTimeLoc = gl.getUniformLocation(prog, 'u_time');
+    const uResLoc = gl.getUniformLocation(prog, 'u_resolution');
+
+    function render(t) {
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        if (uTimeLoc) gl.uniform1f(uTimeLoc, t * 0.001);
+        if (uResLoc) gl.uniform2f(uResLoc, canvas.width, canvas.height);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        requestAnimationFrame(render);
+    }
+    render(0);
 }
 
 // --- 4. WEB AUDIO SOUND SYNTHESIZER ---
@@ -316,9 +308,9 @@ function playTickSound() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
         gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -335,7 +327,7 @@ function playWinSound() {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime + idx * 0.08);
+            gain.gain.setValueAtTime(0.25, audioCtx.currentTime + idx * 0.08);
             gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.08 + 0.25);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -345,99 +337,146 @@ function playWinSound() {
     } catch (e) {}
 }
 
-// --- 5. CANVAS FORTUNE WHEEL ENGINE ---
+// --- 5. STITCH MCP THREE.JS 3D GOLDEN ZODIAC WHEEL ENGINE ---
 const sectors = [
-    { label: "+10", pts: 10, color: "#1e1035", textColor: "#ffd700" },
-    { label: "+25", pts: 25, color: "#31145a", textColor: "#ffffff" },
-    { label: "+50", pts: 50, color: "#4c1d95", textColor: "#ffe066" },
-    { label: "+100", pts: 100, color: "#0891b2", textColor: "#ffffff" },
-    { label: "TRY AGAIN", pts: 0, color: "#1f2937", textColor: "#9ca3af" },
-    { label: "+15", pts: 15, color: "#2e1065", textColor: "#ffd700" },
-    { label: "+75", pts: 75, color: "#7c3aed", textColor: "#ffffff" },
-    { label: "JACKPOT +500", pts: 500, color: "#b45309", textColor: "#fffbeb" }
+    { label: "+10 PTS", pts: 10, color: 0xffd700 },
+    { label: "+25 PTS", pts: 25, color: 0xb8860b },
+    { label: "+50 PTS", pts: 50, color: 0x9333ea },
+    { label: "+100 PTS", pts: 100, color: 0x06b6d4 },
+    { label: "TRY AGAIN", pts: 0, color: 0x334155 },
+    { label: "+15 PTS", pts: 15, color: 0xd97706 },
+    { label: "+75 PTS", pts: 75, color: 0x7c3aed },
+    { label: "JACKPOT +500", pts: 500, color: 0xf59e0b }
 ];
 
 const numSectors = sectors.length;
 const sectorArc = (2 * Math.PI) / numSectors;
+
+let wheelGroup;
 let currentWheelAngle = 0;
 let isSpinning = false;
 
-function drawWheel() {
-    const canvas = document.getElementById("wheel-canvas");
-    const ctx = canvas.getContext("2d");
-    const r = canvas.width / 2;
+function initStitchThreeJSWheel() {
+    const container = document.getElementById('threejs-wheel-container');
+    if (!container) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const width = container.clientWidth || 400;
+    const height = container.clientHeight || 400;
 
-    ctx.save();
-    ctx.translate(r, r);
-    ctx.rotate(currentWheelAngle);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
 
-    // Draw Slices
+    // Dynamic Lighting Setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+    
+    const pointLight1 = new THREE.PointLight(0xffd700, 2.5, 100);
+    pointLight1.position.set(5, 5, 8);
+    scene.add(pointLight1);
+
+    const pointLight2 = new THREE.PointLight(0x7000ff, 2.0, 100);
+    pointLight2.position.set(-5, -5, 5);
+    scene.add(pointLight2);
+
+    wheelGroup = new THREE.Group();
+    scene.add(wheelGroup);
+
+    const radius = 3.2;
+    const thickness = 0.45;
+
+    // Build Extruded 3D Gold Sectors
     for (let i = 0; i < numSectors; i++) {
         const angle = i * sectorArc;
-        ctx.beginPath();
-        ctx.fillStyle = sectors[i].color;
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, r - 8, angle, angle + sectorArc);
-        ctx.lineTo(0, 0);
-        ctx.fill();
+        const nextAngle = (i + 1) * sectorArc;
 
-        // Slice Border Line
-        ctx.strokeStyle = "rgba(255, 215, 0, 0.4)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0);
+        shape.absarc(0, 0, radius, angle, nextAngle, false);
+        shape.lineTo(0, 0);
 
-        // Text Label
-        ctx.save();
-        ctx.rotate(angle + sectorArc / 2);
-        ctx.textAlign = "right";
-        ctx.fillStyle = sectors[i].textColor;
-        ctx.font = "bold 15px 'Outfit', sans-serif";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-        ctx.shadowBlur = 4;
-        ctx.fillText(sectors[i].label, r - 28, 5);
-        ctx.restore();
+        const extrudeSettings = { depth: thickness, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.06, bevelSegments: 3 };
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+        const material = new THREE.MeshPhongMaterial({
+            color: sectors[i].color,
+            specular: 0xffffff,
+            shininess: 90,
+            flatShading: false
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        wheelGroup.add(mesh);
     }
 
-    // Outer Rim Border
-    ctx.beginPath();
-    ctx.arc(0, 0, r - 8, 0, 2 * Math.PI);
-    ctx.strokeStyle = "#ffd700";
-    ctx.lineWidth = 6;
-    ctx.stroke();
+    // Center Glowing Brass Hub Cylinder
+    const centerGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.7, 32);
+    const centerMat = new THREE.MeshPhongMaterial({
+        color: 0xffd700,
+        emissive: 0x996515,
+        emissiveIntensity: 0.4,
+        specular: 0xffffff,
+        shininess: 100
+    });
+    const centerMesh = new THREE.Mesh(centerGeo, centerMat);
+    centerMesh.rotation.x = Math.PI / 2;
+    centerMesh.position.z = thickness / 2;
+    wheelGroup.add(centerMesh);
 
-    ctx.restore();
+    camera.position.z = 6.2;
+
+    // Render Loop
+    function renderLoop() {
+        requestAnimationFrame(renderLoop);
+        if (!isSpinning) {
+            wheelGroup.rotation.z += 0.002; // ambient slow rotation
+            currentWheelAngle = wheelGroup.rotation.z;
+        }
+        renderer.render(scene, camera);
+    }
+    renderLoop();
+
+    window.addEventListener('resize', () => {
+        const w = container.clientWidth || 400;
+        const h = container.clientHeight || 400;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+    });
 }
 
 function spinWheel() {
-    if (isSpinning) return;
+    if (isSpinning || !wheelGroup) return;
     isSpinning = true;
     document.getElementById("btn-spin").disabled = true;
 
-    // Calculate random spin angle (5 to 8 full rotations + random offset)
-    const extraRotations = Math.floor(Math.random() * 4) + 5;
+    // Pick random target slice index
     const targetSectorIndex = Math.floor(Math.random() * numSectors);
+    const extraRotations = Math.floor(Math.random() * 4) + 6; // 6 to 9 full spins
     
-    // Pointer is at TOP (-Math.PI / 2). Target slice angle offset:
+    // Top Pointer is at angle Math.PI / 2
     const targetAngleOffset = (2 * Math.PI) - (targetSectorIndex * sectorArc + sectorArc / 2);
-    const totalRotation = (extraRotations * 2 * Math.PI) + targetAngleOffset - (currentWheelAngle % (2 * Math.PI));
-    
-    const startAngle = currentWheelAngle;
+    const startAngle = wheelGroup.rotation.z;
+    const totalRotation = (extraRotations * 2 * Math.PI) + targetAngleOffset - (startAngle % (2 * Math.PI));
     const finalAngle = startAngle + totalRotation;
-    const duration = 4500; // ms
+    
+    const duration = 4800; // ms
     const startTime = performance.now();
     let lastSectorTick = -1;
 
     function animateSpin(now) {
         const elapsed = now - startTime;
         if (elapsed < duration) {
-            // Cubic Ease Out Easing
             const progress = elapsed / duration;
+            // Cubic Ease Out
             const easeOut = 1 - Math.pow(1 - progress, 3);
             currentWheelAngle = startAngle + totalRotation * easeOut;
+            wheelGroup.rotation.z = currentWheelAngle;
 
-            // Check tick sound on sector crossing
+            // Audio ticker check
             const normalizedAngle = (currentWheelAngle + Math.PI / 2) % (2 * Math.PI);
             const currentSectorIdx = Math.floor(normalizedAngle / sectorArc) % numSectors;
             if (currentSectorIdx !== lastSectorTick) {
@@ -446,15 +485,13 @@ function spinWheel() {
                 lastSectorTick = currentSectorIdx;
             }
 
-            drawWheel();
             requestAnimationFrame(animateSpin);
         } else {
             currentWheelAngle = finalAngle;
-            drawWheel();
+            wheelGroup.rotation.z = currentWheelAngle;
             isSpinning = false;
             document.getElementById("btn-spin").disabled = false;
 
-            // Handle Spin Outcome
             onSpinComplete(sectors[targetSectorIndex]);
         }
     }
@@ -463,8 +500,9 @@ function spinWheel() {
 
 function triggerPointerBounce() {
     const ptr = document.getElementById("wheel-pointer-img");
+    if (!ptr) return;
     ptr.classList.remove("tick-bounce");
-    void ptr.offsetWidth; // trigger reflow
+    void ptr.offsetWidth;
     ptr.classList.add("tick-bounce");
 }
 
@@ -479,11 +517,9 @@ function onSpinComplete(sector) {
     saveGameState();
     updateUI();
 
-    // Show result message
-    const msg = sector.pts > 0 ? `✨ Celestial Blessing! You won +${sector.pts} Points!` : `🌌 The stars urge patience. Try again!`;
+    const msg = sector.pts > 0 ? `✨ Celestial Blessing! You won ${sector.label}!` : `🌌 The stars urge patience. Try again!`;
     document.getElementById("last-result-text").textContent = msg;
 
-    // Check if threshold unlocked
     checkUnlockStatus();
 }
 
@@ -491,17 +527,14 @@ function onSpinComplete(sector) {
 function updateUI() {
     const dict = i18n[currentLanguage] || i18n.English;
 
-    // Points display
-    document.getElementById("user-points").textContent = gameState.points;
+    document.getElementById("user-points").textContent = gameState.points.toLocaleString();
+    document.getElementById("target-level-label").textContent = `Target: ${gameState.targetPoints.toLocaleString()} PTS`;
 
-    // Target Label & Progress Bar
-    document.getElementById("target-level-label").textContent = `Target: ${gameState.targetPoints} PTS`;
     const progressPercent = Math.min(100, Math.round((gameState.points / gameState.targetPoints) * 100));
     document.getElementById("target-progress-fill").style.width = `${progressPercent}%`;
 
-    // Unlock Status Text
     const ptsNeeded = Math.max(0, gameState.targetPoints - gameState.points);
-    document.getElementById("pts-needed").textContent = ptsNeeded;
+    document.getElementById("pts-needed").textContent = ptsNeeded.toLocaleString();
 
     checkUnlockStatus();
 }
@@ -522,19 +555,19 @@ function checkUnlockStatus() {
         } else {
             unlockIcon.textContent = "✅";
             unlockHeading.textContent = "Reading Completed for Level " + gameState.targetLevel;
-            unlockDesc.textContent = `Next target unlocked at ${gameState.targetPoints + 500} Points. Keep spinning!`;
+            unlockDesc.textContent = `Next target unlocked at ${(gameState.targetPoints + 500).toLocaleString()} Points. Keep spinning!`;
             btnOpenChat.classList.add("hidden");
         }
     } else {
         unlockIcon.textContent = "🔒";
         unlockHeading.textContent = dict.chatLocked;
         const ptsNeeded = gameState.targetPoints - gameState.points;
-        unlockDesc.textContent = dict.ptsNeededText.replace("{pts}", ptsNeeded);
+        unlockDesc.textContent = dict.ptsNeededText.replace("{pts}", ptsNeeded.toLocaleString());
         btnOpenChat.classList.add("hidden");
     }
 }
 
-// --- 7. BIRTH DETAILS MODAL & CUSTOM FAST YEAR SELECTOR ---
+// --- 7. BIRTH DETAILS MODAL & FAST DIRECT YEAR SELECTOR ---
 function initBirthDetailsForm() {
     const daySelect = document.getElementById("dob-day");
     const yearSelect = document.getElementById("dob-year");
@@ -552,19 +585,19 @@ function initBirthDetailsForm() {
         yearSelect.appendChild(new Option(y, y));
     }
 
-    // Populate 12-Hour Format Hours (01-12)
+    // Hours (01-12)
     for (let h = 1; h <= 12; h++) {
         const val = h < 10 ? "0" + h : "" + h;
         hourSelect.appendChild(new Option(val, val));
     }
 
-    // Populate Minutes (00-59)
+    // Minutes (00-59)
     for (let m = 0; m < 60; m++) {
         const val = m < 10 ? "0" + m : "" + m;
         minuteSelect.appendChild(new Option(val, val));
     }
 
-    // Load saved birth details if present
+    // Load saved details if available
     if (gameState.birthDetails) {
         document.getElementById("input-name").value = gameState.birthDetails.name || "";
         document.getElementById("input-place").value = gameState.birthDetails.place || "";
@@ -590,7 +623,7 @@ function initBirthDetailsForm() {
         updateSeekerSummaryBadge();
     }
 
-    // Modal Toggle Events
+    // Modal Toggle
     const modalBirth = document.getElementById("modal-birth");
     document.getElementById("btn-open-birth-modal").addEventListener("click", () => {
         modalBirth.classList.remove("hidden");
@@ -599,7 +632,7 @@ function initBirthDetailsForm() {
         modalBirth.classList.add("hidden");
     });
 
-    // Handle Form Submit
+    // Form Submission
     document.getElementById("form-birth-details").addEventListener("submit", (e) => {
         e.preventDefault();
         const name = document.getElementById("input-name").value.trim();
@@ -627,7 +660,7 @@ function initBirthDetailsForm() {
         updateSeekerSummaryBadge();
         modalBirth.classList.add("hidden");
 
-        alert("✨ Birth details aligned! Guruji is ready for your chart.");
+        alert("✨ Sacred Birth details saved! Guruji is ready to analyze your natal chart.");
     });
 }
 
@@ -640,14 +673,13 @@ function updateSeekerSummaryBadge() {
     }
 }
 
-// --- 8. AI ASTROLOGER CHAT CONTROLLER ---
+// --- 8. AI ASTROLOGER CONSULTATION DRAWER ENGINE ---
 function initChatModal() {
     const modalChat = document.getElementById("modal-chat");
     const btnOpenDirect = document.getElementById("btn-open-chat-direct");
     const btnCloseChat = document.getElementById("btn-close-chat");
     const btnSend = document.getElementById("btn-send-question");
     const questionInput = document.getElementById("question-input");
-    const chatHistory = document.getElementById("chat-history-box");
     const lockedNotice = document.getElementById("chat-locked-notice");
     const inputWrapper = document.getElementById("chat-input-wrapper");
 
@@ -674,17 +706,15 @@ function initChatModal() {
         }
 
         if (gameState.currentChatLocked) {
-            alert("You have already received your single reading for this level! Earn more points to unlock the next target.");
+            alert("You have already received your single reading for this target level! Earn more points to unlock the next consultation.");
             return;
         }
 
-        // Add User Message to Chat
         appendChatMessage("Seeker", question, "user-msg");
         questionInput.value = "";
         btnSend.disabled = true;
 
-        // Show Loading State
-        const loadingId = appendChatMessage("Guruji", "🔮 Consulting planetary charts and transits for your reading...", "guru-msg");
+        const loadingId = appendChatMessage("Guruji", "🔮 Consulting planetary transits and natal chart for your reading...", "guru-msg");
 
         try {
             const response = await fetch("/api/astro/ask", {
@@ -704,12 +734,11 @@ function initChatModal() {
             const loadingElem = document.getElementById(loadingId);
 
             if (response.ok && data.reading) {
-                // Typewriter effect reading
                 typewriterMessage(loadingElem.querySelector(".msg-bubble"), data.reading, () => {
-                    // Lock single-question reading for current level
+                    // Single question locked for current level
                     gameState.currentChatLocked = true;
                     gameState.unlockedReadingsCount++;
-                    
+
                     // Endless progression: set next target to +500
                     gameState.targetPoints += 500;
                     gameState.targetLevel++;
@@ -717,11 +746,10 @@ function initChatModal() {
                     saveGameState();
                     updateUI();
 
-                    // Show Lock notice in chat
                     inputWrapper.classList.add("hidden");
                     lockedNotice.classList.remove("hidden");
                     const dict = i18n[currentLanguage] || i18n.English;
-                    document.getElementById("next-target-text").textContent = dict.readingCompleteDesc.replace("{target}", gameState.targetPoints);
+                    document.getElementById("next-target-text").textContent = dict.readingCompleteDesc.replace("{target}", gameState.targetPoints.toLocaleString());
                 });
             } else {
                 loadingElem.querySelector(".msg-bubble").textContent = `🌌 Guruji says: ${data.detail || "The stars are temporarily obscured. Please try asking again."}`;
@@ -730,7 +758,7 @@ function initChatModal() {
         } catch (err) {
             console.error("Chat error:", err);
             const loadingElem = document.getElementById(loadingId);
-            if (loadingElem) loadingElem.querySelector(".msg-bubble").textContent = "🌌 Celestial network error. Please try again.";
+            if (loadingElem) loadingElem.querySelector(".msg-bubble").textContent = "🌌 Celestial alignment error. Please try again.";
             btnSend.disabled = false;
         }
     });
@@ -741,12 +769,21 @@ function appendChatMessage(author, text, msgClass) {
     const msgDiv = document.createElement("div");
     const msgId = "msg-" + Date.now();
     msgDiv.id = msgId;
-    msgDiv.className = `chat-msg ${msgClass}`;
+    
+    if (msgClass === "user-msg") {
+        msgDiv.className = "chat-msg self-end max-w-[85%]";
+        msgDiv.innerHTML = `
+            <div class="text-[10px] text-on-surface-variant font-semibold mb-1 text-right">${author}</div>
+            <div class="bg-primary-container text-on-primary rounded-2xl rounded-tr-sm p-4 text-sm font-semibold shadow-lg">${text}</div>
+        `;
+    } else {
+        msgDiv.className = "chat-msg self-start max-w-[85%]";
+        msgDiv.innerHTML = `
+            <div class="text-[10px] text-primary-container font-semibold mb-1">${author}</div>
+            <div class="msg-bubble bg-surface-container/90 border border-primary/20 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-100 leading-relaxed shadow-lg">${text}</div>
+        `;
+    }
 
-    msgDiv.innerHTML = `
-        <div class="msg-author">${author}</div>
-        <div class="msg-bubble">${text}</div>
-    `;
     box.appendChild(msgDiv);
     box.scrollTop = box.scrollHeight;
     return msgId;
@@ -755,7 +792,7 @@ function appendChatMessage(author, text, msgClass) {
 function typewriterMessage(element, fullText, callback) {
     element.textContent = "";
     let i = 0;
-    const speed = 12; // ms per char
+    const speed = 12;
 
     function type() {
         if (i < fullText.length) {
@@ -783,7 +820,6 @@ function initLanguageSelector() {
 function applyLanguageTranslations() {
     const dict = i18n[currentLanguage] || i18n.English;
 
-    // Apply data-i18n attributes
     document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
         if (dict[key]) {
@@ -791,7 +827,6 @@ function applyLanguageTranslations() {
         }
     });
 
-    // Apply data-i18n-placeholder
     document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
         const key = el.getAttribute("data-i18n-placeholder");
         if (dict[key]) {
@@ -805,8 +840,8 @@ function applyLanguageTranslations() {
 // --- 10. INITIALIZATION ENTRYPOINT ---
 window.addEventListener("DOMContentLoaded", () => {
     loadGameState();
-    initStarfield();
-    drawWheel();
+    initStitchCosmicShader();
+    initStitchThreeJSWheel();
     initBirthDetailsForm();
     initChatModal();
     initLanguageSelector();

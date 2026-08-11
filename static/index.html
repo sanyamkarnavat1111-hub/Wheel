@@ -1,55 +1,96 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
     <title>Cosmic Kundali Wheel | Divine AI Astrologer</title>
-    <!-- Google Fonts: Outfit & Cinzel -->
+    
+    <!-- Stitch Design System Fonts & Material Symbols -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <!-- Dynamic Twinkling & Shooting Star Background Canvas -->
-    <canvas id="starfield-canvas"></canvas>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;900&family=Montserrat:wght@300;400;500;600;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS Engine -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container-highest": "#353534",
+                        "background": "#0c0817",
+                        "primary": "#fff6df",
+                        "primary-container": "#ffd700",
+                        "on-primary": "#3a3000",
+                        "secondary": "#d1bcff",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#d0c6ab",
+                        "outline": "#999077"
+                    },
+                    fontFamily: {
+                        "headline": ["Playfair Display", "serif"],
+                        "body": ["Montserrat", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Three.js 3D Renderer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <div class="app-viewport">
-        <!-- Header Nav -->
-        <header class="app-header">
-            <div class="brand">
-                <span class="brand-icon">✨</span>
-                <h1 class="brand-title" data-i18n="appTitle">KUNDALI COSMIC WHEEL</h1>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="bg-background text-on-surface h-screen w-screen overflow-hidden relative font-body select-none">
+
+    <!-- Stitch Cosmic Nebula WebGL Background Shader Canvas -->
+    <div class="absolute inset-0 w-full h-full z-0 pointer-events-none">
+        <canvas id="shader-canvas-cosmic" class="w-full h-full block"></canvas>
+    </div>
+
+    <!-- Main Viewport Overlay -->
+    <div class="relative z-10 flex flex-col h-screen max-h-screen">
+        
+        <!-- Top Glass App Bar -->
+        <header class="w-full bg-surface/80 backdrop-blur-xl border-b border-primary/20 shadow-[0_4px_30px_rgba(0,0,0,0.6)] flex justify-between items-center px-4 md:px-8 h-16 flex-shrink-0">
+            <div class="font-headline font-bold text-xl md:text-2xl text-primary drop-shadow-[0_0_12px_rgba(255,215,0,0.6)] flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary-container animate-spin-slow">auto_awesome</span>
+                <span data-i18n="appTitle">COSMIC KUNDALI</span>
             </div>
 
-            <div class="header-right">
-                <!-- Points Meter -->
-                <div class="points-badge">
-                    <img src="assets/cosmic_coin.png" alt="Coins" class="coin-icon">
-                    <div class="points-info">
-                        <span class="points-val" id="user-points">0</span>
-                        <span class="points-label" data-i18n="points">PTS</span>
-                    </div>
+            <div class="flex items-center gap-3 md:gap-5">
+                <!-- Points Coin Badge -->
+                <div class="glass-panel px-3 py-1.5 rounded-full flex items-center gap-2 border border-primary-container/40 shadow-[0_0_15px_rgba(255,215,0,0.2)]">
+                    <img src="assets/cosmic_coin.png" alt="Coin" class="w-6 h-6 object-contain animate-pulse"/>
+                    <span class="font-headline font-bold text-primary-container text-base" id="user-points">0</span>
+                    <span class="text-xs text-on-surface-variant font-semibold" data-i18n="points">PTS</span>
                 </div>
 
                 <!-- Target Progress Pill -->
-                <div class="target-pill">
-                    <span class="target-level" id="target-level-label">Target: 500</span>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" id="target-progress-fill" style="width: 0%;"></div>
+                <div class="hidden sm:flex flex-col gap-1 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 min-w-[130px]">
+                    <div class="flex justify-between items-center text-[10px] text-on-surface-variant font-semibold">
+                        <span id="target-level-label">Target: 500</span>
+                    </div>
+                    <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                        <div id="target-progress-fill" class="bg-gradient-to-r from-yellow-300 via-amber-500 to-yellow-600 h-full w-0 transition-all duration-500 shadow-[0_0_8px_#ffd700]"></div>
                     </div>
                 </div>
 
                 <!-- Action Controls -->
-                <button class="btn-secondary" id="btn-open-birth-modal">
-                    <span>📜</span>
+                <button id="btn-open-birth-modal" class="glass-panel hover:bg-white/10 text-primary px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all hover:border-primary-container/60">
+                    <span class="material-symbols-outlined text-base">scroll</span>
                     <span data-i18n="birthDetailsBtn">Birth Details</span>
                 </button>
 
-                <!-- Language Selector -->
-                <div class="lang-selector-wrapper">
-                    <span class="lang-icon">🌐</span>
-                    <select id="lang-selector" class="lang-select">
+                <!-- Language Switcher -->
+                <div class="flex items-center gap-1 bg-black/50 border border-primary/30 px-2 py-1 rounded-xl text-xs">
+                    <span class="material-symbols-outlined text-sm text-primary">language</span>
+                    <select id="lang-selector" class="bg-transparent text-primary-container font-semibold outline-none cursor-pointer">
                         <option value="English">English</option>
                         <option value="Hindi">हिंदी (Hindi)</option>
                         <option value="Marathi">मराठी (Marathi)</option>
@@ -63,189 +104,195 @@
             </div>
         </header>
 
-        <!-- Main Workspace -->
-        <main class="main-content">
-            <!-- Left Panel / Status Banner -->
-            <div class="cosmic-card status-card">
-                <div class="card-header">
-                    <h2 data-i18n="wheelTitle">Spin the Cosmic Wheel</h2>
-                    <p class="subtitle" data-i18n="wheelSubtitle">Gather celestial energy to unlock Guruji's divine readings</p>
+        <!-- Main Interactive Workspace -->
+        <main class="flex-1 grid grid-cols-1 lg:grid-cols-[300px_1fr_360px] gap-4 p-4 md:p-6 min-h-0 items-center">
+            
+            <!-- Left Panel: Status & Unlock Banner -->
+            <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between h-full max-h-[480px] shadow-2xl border border-primary/20">
+                <div>
+                    <h2 class="font-headline font-bold text-lg text-primary-container mb-1" data-i18n="wheelTitle">Spin the Cosmic Wheel</h2>
+                    <p class="text-xs text-on-surface-variant leading-relaxed" data-i18n="wheelSubtitle">Gather celestial energy to unlock Guruji's divine readings</p>
                 </div>
 
-                <!-- Unlock Status Banner -->
-                <div class="unlock-banner" id="unlock-banner">
-                    <div class="unlock-status-icon" id="unlock-icon">🔒</div>
-                    <div class="unlock-status-text">
-                        <h4 id="unlock-heading" data-i18n="chatLocked">AI Astrologer Chat Locked</h4>
-                        <p id="unlock-desc">Earn <strong id="pts-needed">500</strong> points to unlock 1 divine question consultation.</p>
+                <!-- Unlock Status Card -->
+                <div class="bg-black/50 border border-primary/30 rounded-xl p-4 text-center flex flex-col items-center gap-3">
+                    <div id="unlock-icon" class="text-3xl animate-bounce">🔒</div>
+                    <div>
+                        <h4 id="unlock-heading" class="font-semibold text-sm text-on-surface" data-i18n="chatLocked">AI Astrologer Chat Locked</h4>
+                        <p id="unlock-desc" class="text-xs text-on-surface-variant mt-1">Earn <strong id="pts-needed" class="text-primary-container">500</strong> points to unlock 1 divine question consultation.</p>
                     </div>
-                    <button class="btn-gold hidden" id="btn-open-chat-direct" data-i18n="openChatBtn">Consult Guruji</button>
+                    <button id="btn-open-chat-direct" class="btn-gold hidden w-full py-2 rounded-xl font-bold text-xs shadow-[0_0_15px_rgba(255,215,0,0.5)]" data-i18n="openChatBtn">Consult Guruji</button>
                 </div>
 
-                <!-- Recent Winnings Ticker -->
-                <div class="spin-history">
-                    <span class="history-label" data-i18n="lastWin">Last Result:</span>
-                    <span class="history-val" id="last-result-text" data-i18n="readyToSpin">Spin to begin your destiny!</span>
+                <!-- Recent Win Result Ticker -->
+                <div class="bg-surface-container/60 rounded-xl p-3 text-xs border border-white/5">
+                    <span class="text-on-surface-variant block text-[10px] uppercase font-bold" data-i18n="lastWin">Last Result:</span>
+                    <span id="last-result-text" class="text-primary-container font-semibold mt-0.5 block" data-i18n="readyToSpin">Spin to begin your destiny!</span>
                 </div>
             </div>
 
-            <!-- Center Fortune Wheel Container -->
-            <div class="wheel-stage">
-                <!-- Outer Glowing Zodiac Ring -->
-                <div class="wheel-outer-ring">
-                    <!-- Top Pointer -->
-                    <div class="pointer-wrapper">
-                        <img src="assets/cosmic_pointer.png" alt="Pointer" class="wheel-pointer" id="wheel-pointer-img">
-                    </div>
-
-                    <!-- Canvas Wheel -->
-                    <canvas id="wheel-canvas" width="420" height="420"></canvas>
-
-                    <!-- Center Spin Button Hub -->
-                    <button class="spin-center-hub" id="btn-spin">
-                        <span class="spin-text" data-i18n="spin">SPIN</span>
-                    </button>
+            <!-- Center Stage: 3D Fortune Wheel & Controls -->
+            <div class="flex flex-col items-center justify-center relative w-full h-full">
+                
+                <!-- Top Pointer Indicator -->
+                <div class="z-20 -mb-6 flex flex-col items-center pointer-events-none">
+                    <img src="assets/cosmic_pointer.png" alt="Pointer" id="wheel-pointer-img" class="w-12 h-auto drop-shadow-[0_0_15px_rgba(255,215,0,0.9)] transition-transform duration-100"/>
                 </div>
+
+                <!-- 3D Wheel Stage Container -->
+                <div class="relative w-full aspect-square max-w-[420px] glass-panel rounded-full flex items-center justify-center aura-glow border-2 border-primary/40 shadow-[inset_0_0_50px_rgba(255,246,223,0.15)] overflow-hidden">
+                    <div id="threejs-wheel-container" class="w-full h-full rounded-full"></div>
+                </div>
+
+                <!-- Spin Button -->
+                <button id="btn-spin" class="btn-spin mt-6 px-10 py-3.5 bg-gradient-to-b from-primary-container via-amber-400 to-amber-700 rounded-full font-headline font-bold text-lg text-on-primary shadow-[0_10px_30px_rgba(255,215,0,0.5)] flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all border border-primary-fixed cursor-pointer">
+                    <span class="material-symbols-outlined font-bold">star</span>
+                    <span data-i18n="spin">SPIN</span>
+                </button>
             </div>
 
-            <!-- Right Panel / Guru Preview Card -->
-            <div class="cosmic-card guru-preview-card">
-                <div class="guru-avatar-wrapper">
-                    <img src="assets/guruji_avatar.png" alt="Guruji AI Astrologer" class="guru-avatar-img">
-                    <div class="aura-glow"></div>
+            <!-- Right Panel: Guruji Astrologer Live Preview Card -->
+            <div class="hidden lg:flex glass-panel rounded-2xl p-5 flex-col items-center text-center justify-between h-full max-h-[480px] shadow-2xl border border-primary/20">
+                <div class="relative w-28 h-28 mt-2">
+                    <img src="assets/guruji_avatar.png" alt="Guruji AI Astrologer" class="w-full h-full rounded-full object-cover border-2 border-primary-container shadow-[0_0_20px_rgba(255,215,0,0.6)]"/>
+                    <div class="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-amber-400 to-indigo-600 opacity-40 blur-sm -z-10 animate-pulse"></div>
                 </div>
-                <h3 class="guru-name">Guruji AI Astrologer</h3>
-                <p class="guru-role" data-i18n="guruRole">Master of Vedic Kundali & Transits</p>
-                <div class="guru-quote" id="guru-quote">
+
+                <div>
+                    <h3 class="font-headline font-bold text-lg text-primary-container">Guruji AI Astrologer</h3>
+                    <p class="text-xs text-on-surface-variant mt-0.5" data-i18n="guruRole">Master of Vedic Kundali & Transits</p>
+                </div>
+
+                <div class="bg-black/40 p-3.5 rounded-xl border-l-2 border-primary-container text-xs italic text-slate-300 leading-relaxed text-left">
                     "The stars do not force destiny; they illuminate the pathways of your soul."
                 </div>
             </div>
+
         </main>
     </div>
 
-    <!-- Birth Details Modal -->
-    <div class="modal-backdrop hidden" id="modal-birth">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3><span class="modal-icon">📜</span> <span data-i18n="birthModalTitle">Sacred Kundali Birth Details</span></h3>
-                <button class="btn-close" id="btn-close-birth">&times;</button>
+    <!-- Sacred Birth Details Modal -->
+    <div id="modal-birth" class="modal-backdrop hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex justify-center items-center p-4">
+        <div class="modal-card bg-[#0f0724] border border-primary/40 rounded-2xl w-full max-w-lg shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-primary/20 bg-white/5">
+                <h3 class="font-headline font-bold text-lg text-primary-container flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">auto_stories</span>
+                    <span data-i18n="birthModalTitle">Sacred Kundali Birth Details</span>
+                </h3>
+                <button id="btn-close-birth" class="text-on-surface-variant hover:text-primary text-2xl cursor-pointer">&times;</button>
             </div>
-            <div class="modal-body">
-                <form id="form-birth-details">
-                    <div class="form-group">
-                        <label for="input-name" data-i18n="labelName">Full Name</label>
-                        <input type="text" id="input-name" placeholder="e.g. Ramesh Sharma" required>
-                    </div>
+            
+            <form id="form-birth-details" class="p-6 flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                    <label for="input-name" class="text-xs font-semibold text-primary-container" data-i18n="labelName">Full Name</label>
+                    <input type="text" id="input-name" placeholder="e.g. Ramesh Sharma" class="bg-black/50 border border-primary/30 rounded-xl px-3.5 py-2 text-sm text-white outline-none focus:border-primary-container transition-colors" required/>
+                </div>
 
-                    <div class="form-group">
-                        <label for="input-place" data-i18n="labelPlace">Place of Birth (City, Country)</label>
-                        <input type="text" id="input-place" placeholder="e.g. New Delhi, India" required>
-                    </div>
+                <div class="flex flex-col gap-1">
+                    <label for="input-place" class="text-xs font-semibold text-primary-container" data-i18n="labelPlace">Place of Birth (City, Country)</label>
+                    <input type="text" id="input-place" placeholder="e.g. New Delhi, India" class="bg-black/50 border border-primary/30 rounded-xl px-3.5 py-2 text-sm text-white outline-none focus:border-primary-container transition-colors" required/>
+                </div>
 
-                    <!-- Custom Fast DOB Selector (Year Dropdown + Month & Day) -->
-                    <div class="form-group">
-                        <label data-i18n="labelDOB">Date of Birth</label>
-                        <div class="dob-picker-row">
-                            <select id="dob-day" class="custom-select" required>
-                                <option value="" disabled selected>Day</option>
-                            </select>
-                            <select id="dob-month" class="custom-select" required>
-                                <option value="" disabled selected>Month</option>
-                                <option value="01">January</option>
-                                <option value="02">February</option>
-                                <option value="03">March</option>
-                                <option value="04">April</option>
-                                <option value="05">May</option>
-                                <option value="06">June</option>
-                                <option value="07">July</option>
-                                <option value="08">August</option>
-                                <option value="09">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
-                            </select>
-                            <select id="dob-year" class="custom-select year-fast-select" required>
-                                <option value="" disabled selected>Year (Direct Select)</option>
-                            </select>
-                        </div>
-                        <small class="help-text" data-i18n="dobHelp">Quickly choose your birth year from 1940 to 2026 without endless clicking.</small>
+                <!-- Custom Fast Direct Year DOB Selector -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-primary-container" data-i18n="labelDOB">Date of Birth</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <select id="dob-day" class="bg-black/50 border border-primary/30 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-primary-container" required>
+                            <option value="" disabled selected>Day</option>
+                        </select>
+                        <select id="dob-month" class="bg-black/50 border border-primary/30 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-primary-container" required>
+                            <option value="" disabled selected>Month</option>
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <select id="dob-year" class="bg-black/50 border border-primary/30 rounded-xl px-3 py-2 text-xs text-primary-container font-semibold outline-none focus:border-primary-container" required>
+                            <option value="" disabled selected>Year (Direct)</option>
+                        </select>
                     </div>
+                    <span class="text-[10px] text-on-surface-variant" data-i18n="dobHelp">Quickly choose your birth year from 1940 to 2026 without endless clicking.</span>
+                </div>
 
-                    <!-- 12-Hour Time Selector -->
-                    <div class="form-group">
-                        <label data-i18n="labelTOB">Time of Birth (12-Hour Format)</label>
-                        <div class="time-picker-row">
-                            <select id="tob-hour" class="custom-select" required>
-                                <option value="" disabled selected>Hour</option>
-                            </select>
-                            <select id="tob-minute" class="custom-select" required>
-                                <option value="" disabled selected>Minute</option>
-                            </select>
-                            <select id="tob-ampm" class="custom-select" required>
-                                <option value="AM">AM</option>
-                                <option value="PM">PM</option>
-                            </select>
-                        </div>
+                <!-- 12-Hour Time Selector -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-primary-container" data-i18n="labelTOB">Time of Birth (12-Hour Format)</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <select id="tob-hour" class="bg-black/50 border border-primary/30 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-primary-container" required>
+                            <option value="" disabled selected>Hour</option>
+                        </select>
+                        <select id="tob-minute" class="bg-black/50 border border-primary/30 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-primary-container" required>
+                            <option value="" disabled selected>Minute</option>
+                        </select>
+                        <select id="tob-ampm" class="bg-black/50 border border-primary/30 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-primary-container" required>
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
                     </div>
+                </div>
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn-gold w-100" data-i18n="saveDetailsBtn">Save Details & Align Stars</button>
-                    </div>
-                </form>
-            </div>
+                <button type="submit" class="btn-gold w-full py-3 rounded-xl font-bold text-sm shadow-[0_0_20px_rgba(255,215,0,0.5)] mt-2" data-i18n="saveDetailsBtn">Save Details & Align Stars</button>
+            </form>
         </div>
     </div>
 
-    <!-- AI Astrologer Chat Modal / Drawer -->
-    <div class="modal-backdrop hidden" id="modal-chat">
-        <div class="modal-card chat-modal-card">
-            <div class="modal-header">
-                <div class="chat-header-title">
-                    <img src="assets/guruji_avatar.png" alt="Guruji" class="chat-header-avatar">
+    <!-- AI Astrologer Consultation Drawer Modal -->
+    <div id="modal-chat" class="modal-backdrop hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex justify-center items-center p-4">
+        <div class="modal-card bg-[#0f0724] border border-primary/40 rounded-2xl w-full max-w-2xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col h-[560px]">
+            
+            <div class="flex justify-between items-center px-6 py-4 border-b border-primary/20 bg-white/5 flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <img src="assets/guruji_avatar.png" alt="Guruji" class="w-10 h-10 rounded-full border border-primary-container"/>
                     <div>
-                        <h3 data-i18n="chatModalTitle">Consultation with Guruji</h3>
-                        <span class="online-indicator">🟢 <span data-i18n="statusConnected">Celestial Portal Active (1 Question Unlocked)</span></span>
+                        <h3 class="font-headline font-bold text-base text-primary-container" data-i18n="chatModalTitle">Consultation with Guruji</h3>
+                        <span class="text-[11px] text-emerald-400 flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span data-i18n="statusConnected">Celestial Portal Active (1 Question Unlocked)</span>
+                        </span>
                     </div>
                 </div>
-                <button class="btn-close" id="btn-close-chat">&times;</button>
+                <button id="btn-close-chat" class="text-on-surface-variant hover:text-primary text-2xl cursor-pointer">&times;</button>
             </div>
 
-            <div class="modal-body chat-modal-body">
-                <!-- Seeker Details Summary Badge -->
-                <div class="seeker-summary-badge" id="seeker-summary-display">
-                    <span>👤 <strong id="summary-name">Seeker</strong></span>
-                    <span>📅 <span id="summary-dob">--</span></span>
-                    <span>⏰ <span id="summary-tob">--</span></span>
-                    <span>📍 <span id="summary-place">--</span></span>
-                </div>
+            <div class="p-4 bg-white/5 border-b border-white/5 flex gap-4 text-xs text-on-surface-variant flex-wrap flex-shrink-0">
+                <span>👤 <strong id="summary-name" class="text-primary-container">Seeker</strong></span>
+                <span>📅 <span id="summary-dob">--</span></span>
+                <span>⏰ <span id="summary-tob">--</span></span>
+                <span>📍 <span id="summary-place">--</span></span>
+            </div>
 
-                <!-- Chat Display Window -->
-                <div class="chat-history-box" id="chat-history-box">
-                    <div class="chat-msg guru-msg">
-                        <div class="msg-author">Guruji</div>
-                        <div class="msg-bubble" data-i18n="guruGreeting">
-                            Pranam seeker! You have unlocked your celestial reading. Ask me your single most important life question about marriage, career, destiny, health, or love.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Single Question Input Box -->
-                <div class="chat-input-area" id="chat-input-wrapper">
-                    <textarea id="question-input" rows="2" placeholder="Ask your question here (e.g. When will I get my dream job?)..." data-i18n-placeholder="questionPlaceholder"></textarea>
-                    <button class="btn-gold" id="btn-send-question">
-                        <span data-i18n="askBtn">Ask Guruji</span> 🔮
-                    </button>
-                </div>
-
-                <!-- Single Question Locked Banner (Post Reading) -->
-                <div class="chat-locked-footer hidden" id="chat-locked-notice">
-                    <span class="lock-icon">🔒</span>
-                    <div>
-                        <strong data-i18n="readingCompleteTitle">Single Reading Complete!</strong>
-                        <p id="next-target-text" data-i18n="readingCompleteDesc">Your next divine target is 1000 Points. Spin the wheel to unlock your next consultation.</p>
+            <div id="chat-history-box" class="flex-1 p-6 overflow-y-auto flex flex-col gap-4 bg-black/40">
+                <div class="chat-msg guru-msg self-start max-w-[85%]">
+                    <div class="text-[10px] text-primary-container font-semibold mb-1">Guruji</div>
+                    <div class="bg-surface-container/90 border border-primary/20 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-100 leading-relaxed shadow-lg" data-i18n="guruGreeting">
+                        Pranam seeker! You have unlocked your celestial reading. Ask me your single most important life question about marriage, career, destiny, health, or love.
                     </div>
                 </div>
             </div>
+
+            <div id="chat-input-wrapper" class="p-4 border-t border-primary/20 bg-black/60 flex gap-2 flex-shrink-0">
+                <textarea id="question-input" rows="2" placeholder="Ask your question here (e.g. When will I get my dream job?)..." class="flex-1 bg-black/60 border border-primary/30 rounded-xl p-3 text-sm text-white outline-none focus:border-primary-container resize-none" data-i18n-placeholder="questionPlaceholder"></textarea>
+                <button id="btn-send-question" class="btn-gold px-5 py-2 rounded-xl font-bold text-xs flex items-center gap-1 shadow-lg">
+                    <span data-i18n="askBtn">Ask Guruji</span> 🔮
+                </button>
+            </div>
+
+            <div id="chat-locked-notice" class="hidden p-4 bg-red-950/40 border-t border-red-500/40 flex items-center gap-3 text-red-200 text-xs flex-shrink-0">
+                <span class="material-symbols-outlined text-2xl text-red-400">lock</span>
+                <div>
+                    <strong class="block text-red-300" data-i18n="readingCompleteTitle">Single Reading Complete!</strong>
+                    <p id="next-target-text" data-i18n="readingCompleteDesc">Your next divine target is 1000 Points. Spin the wheel to unlock your next consultation.</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
