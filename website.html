@@ -719,7 +719,8 @@ const MYSTIC_REPLIES = [
   "Saturn's discipline is on your side right now. A structure you build this month will still be standing a year from now.",
 ];
 
-function ChatInterface({ unlocked, target, userName }) {
+function ChatInterface({ unlocked, target, userDetails }) {
+  const userName = userDetails?.name?.split(" ")[0];
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -737,21 +738,35 @@ function ChatInterface({ unlocked, target, userName }) {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, loading]);
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading || !unlocked) return;
-    setMessages((m) => [...m, { role: "user", text: input.trim() }]);
+    const userQuestion = input.trim();
+    setMessages((m) => [...m, { role: "user", text: userQuestion }]);
     setInput("");
     setLoading(true);
 
-    // REAL APP: replace this timeout with a fetch to your AI Astrologer backend:
-    // const res = await fetch("/api/astrologer", { method: "POST", headers: {...}, body: JSON.stringify({ message, birthDetails }) });
-    // const data = await res.json(); setMessages((m) => [...m, { role: "ai", text: data.reply }]);
-    window.setTimeout(() => {
-      const reply = MYSTIC_REPLIES[Math.floor(Math.random() * MYSTIC_REPLIES.length)];
-      setMessages((m) => [...m, { role: "ai", text: reply }]);
+    try {
+      const res = await fetch("/api/astro/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: userDetails?.name || "Seeker",
+          dob: "Unknown",
+          time: userDetails?.time || "Unknown",
+          place: userDetails?.place || "Unknown",
+          language: "English",
+          question: userQuestion
+        })
+      });
+      if (!res.ok) throw new Error("API Error");
+      const data = await res.json();
+      setMessages((m) => [...m, { role: "ai", text: data.reading }]);
+    } catch (err) {
+      setMessages((m) => [...m, { role: "ai", text: "The cosmic connection was interrupted. Please try again." }]);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -874,7 +889,7 @@ export default function App() {
         <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 items-start">
             <FortuneWheel onWin={handleWin} spinsUsed={spinsUsed} />
-            <ChatInterface unlocked={unlocked} target={target} userName={userDetails?.name?.split(" ")[0]} />
+            <ChatInterface unlocked={unlocked} target={target} userDetails={userDetails} />
           </div>
         </main>
       </div>

@@ -5,6 +5,7 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -79,6 +80,10 @@ Do NOT use markdown headers or code blocks. Present your wisdom as elegant, insp
 @app.get("/health")
 def get_health():
     return {"status": "Celestial server is running", "port": 8001}
+
+@app.get("/")
+def serve_index():
+    return FileResponse("website.html")
 
 
 
