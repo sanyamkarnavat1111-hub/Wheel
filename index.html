@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AstroWheel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-[#07070b] overflow-x-hidden">
+  <div id="root"></div>
+  <script type="text/babel" data-type="module">
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  User,
+  MapPin,
+  Clock,
+  Sparkles,
+  Lock,
+  ArrowUp,
+  Star,
+  Moon,
+  Zap,
+  ArrowRight,
+} from "lucide-react";
+
+/* ============================================================================
+   ASTROWHEEL — polished UI upgrade
+   - Preserved: all game logic, weighted spin, points progression, chat lock,
+     API shape, translations, validation, confetti system.
+   - Upgraded: visual hierarchy, motion design, responsive layout, depth,
+     button feedback, result celebration, reduced-motion support.
+   ========================================================================= */
+
+const TOKENS = {
+  void: "#07070b",
+  panel: "#0d0d16",
+  card: "#111119",
+  violet: "#8b7bff",
+  violetDim: "#4c3a8a",
+  copper: "#cf9a67",
+  gold: "#e8b866",
+  goldSoft: "#f3d9a4",
+  mist: "#7d7c8e",
+  line: "rgba(255,255,255,0.08)",
+  success: "#4ade80",
+};
+
+const TRANSLATIONS = {
+  en: {
+    langName: "English",
+    intakeTitle: "Celestial Intake",
+    intakeHeading: "Chart your path.",
+    intakeDesc: "Four details, and the stars will begin aligning your reading.",
+    fullName: "Full Name",
+    dateOfBirth: "Date of Birth",
+    placeOfBirth: "Place of Birth",
+    timeOfBirth: "Time of Birth",
+    namePlaceholder: "e.g. Aria Nightingale",
+    placePlaceholder: "e.g. Pune, India",
+    fillAll: "Fill in every field so the stars have something to work with.",
+    revealPath: "Reveal My Path",
+    aligning: "Aligning the stars...",
+    wheelTitle: "The Fortune Wheel",
+    wheelOrbits: "08 Orbits",
+    spinBtn: "SPIN",
+    spinning: "SPINNING",
+    heroPlayground: "Unlock Your Kundli Secrets",
+    heroTitle1: "Spin the wheel of destiny.",
+    heroTitle2: "Connect with your path.",
+    heroDesc: "Gather cosmic energy and seek guidance from your personal AI Astrologer.",
+    chatTitle: "AI Astrologer",
+    chatSubtitle: "Your Trusted Astrologer",
+    chatGreeting: "{name}. Your energy has reached {target}. Ask your question.",
+    chatInput: "Ask about your path...",
+    chatLocked: "Channel locked",
+    chatSend: "Send",
+    chatError: "The cosmic connection was interrupted. Please try again.",
+    energy: "Points",
+    channelMsg1: "You channeled ",
+    channelMsg2: " energy",
+    channelFail: "The stars stayed silent. Try again.",
+    lockMsg1: "Your private channel to the cosmos will appear here.",
+    lockMsg2: "{remaining} points more before you can ask your question, keep spinning!"
+  },
+  hi: {
+    langName: "हिंदी",
+    intakeTitle: "कुंडली विवरण",
+    intakeHeading: "अपना मार्ग चुनें।",
+    intakeDesc: "तीन विवरण, और सितारे आपके भविष्य को संरेखित करना शुरू कर देंगे।",
+    fullName: "पूरा नाम",
+    dateOfBirth: "जन्म तिथि",
+    placeOfBirth: "जन्म स्थान",
+    timeOfBirth: "जन्म का समय",
+    namePlaceholder: "उदा. आरिया नाइटिंगेल",
+    placePlaceholder: "उदा. पुणे, भारत",
+    fillAll: "कृपया सभी फ़ील्ड भरें।",
+    revealPath: "मेरा मार्ग दिखाएं",
+    aligning: "सितारों को संरेखित कर रहे हैं...",
+    wheelTitle: "भाग्य चक्र",
+    wheelOrbits: "08 कक्ष",
+    spinBtn: "घुमाएं",
+    spinning: "घूम रहा है",
+    heroPlayground: "अपनी कुंडली के रहस्य खोलें",
+    heroTitle1: "नियति का चक्र घुमाएं।",
+    heroTitle2: "अपने मार्ग से जुड़ें।",
+    heroDesc: "ब्रह्मांडीय ऊर्जा एकत्र करें और अपने व्यक्तिगत AI ज्योतिषी से मार्गदर्शन लें।",
+    chatTitle: "AI ज्योतिषी",
+    chatSubtitle: "आपका विश्वसनीय ज्योतिषी",
+    chatGreeting: "नमस्ते {name}। आपकी ऊर्जा {target} तक पहुँच गई है। अपना प्रश्न पूछें।",
+    chatInput: "अपने मार्ग के बारे में पूछें...",
+    chatLocked: "चैनल बंद है",
+    chatSend: "भेजें",
+    chatError: "ब्रह्मांडीय संपर्क टूट गया। कृपया पुनः प्रयास करें।",
+    energy: "अंक",
+    channelMsg1: "आपको ",
+    channelMsg2: " ऊर्जा प्राप्त हुई",
+    channelFail: "सितारे शांत रहे। पुनः प्रयास करें।",
+    lockMsg1: "ब्रह्मांड के साथ आपका निजी चैनल यहाँ दिखाई देगा।",
+    lockMsg2: "अपना प्रश्न पूछने से पहले {remaining} अधिक अंक, घुमाते रहें!"
+  },
+  mr: {
+    langName: "मराठी",
+    intakeTitle: "कुंडली तपशील",
+    intakeHeading: "तुमचा मार्ग निवडा.",
+    intakeDesc: "तीन तपशील, आणि तारे तुमचे भविष्य जुळवण्यास सुरुवात करतील.",
+    fullName: "पूर्ण नाव",
+    dateOfBirth: "जन्म तारीख",
+    placeOfBirth: "जन्म ठिकाण",
+    timeOfBirth: "जन्म वेळ",
+    namePlaceholder: "उदा. आरिया नाइटिंगेल",
+    placePlaceholder: "उदा. पुणे, भारत",
+    fillAll: "कृपया सर्व माहिती भरा.",
+    revealPath: "माझा मार्ग दाखवा",
+    aligning: "तारे जुळवत आहे...",
+    wheelTitle: "भाग्य चक्र",
+    wheelOrbits: "08 कक्षा",
+    spinBtn: "फिरवा",
+    spinning: "फिरत आहे",
+    heroPlayground: "तुमची कुंडली जाणून घ्या",
+    heroTitle1: "नियतीचे चक्र फिरवा.",
+    heroTitle2: "तुमच्या मार्गाशी जोडा.",
+    heroDesc: "वैश्विक ऊर्जा गोळा करा आणि तुमच्या वैयक्तिक AI ज्योतिषाकडून मार्गदर्शन मिळवा.",
+    chatTitle: "AI ज्योतिषी",
+    chatSubtitle: "तुमचा विश्वासू ज्योतिषी",
+    chatGreeting: "नमस्कार {name}. तुमची ऊर्जा {target} वर पोहोचली आहे. तुमचा प्रश्न विचारा.",
+    chatInput: "तुमच्या भविष्याबद्दल विचारा...",
+    chatLocked: "चॅनेल बंद आहे",
+    chatSend: "पाठवा",
+    chatError: "संपर्क तुटला. कृपया पुन्हा प्रयत्न करा.",
+    energy: "गुण",
+    channelMsg1: "तुम्हाला ",
+    channelMsg2: " ऊर्जा मिळाली",
+    channelFail: "तारे शांत राहिले. पुन्हा प्रयत्न करा.",
+    lockMsg1: "ब्रह्मांडाशी तुमचे खाजगी चॅनेल येथे दिसेल.",
+    lockMsg2: "तुमचा प्रश्न विचारण्यापूर्वी {remaining} अधिक गुण, फिरवत राहा!"
+  },
+  gu: {
+    langName: "ગુજરાતી",
+    intakeTitle: "કુંડળી વિગતો",
+    intakeHeading: "તમારો માર્ગ પસંદ કરો.",
+    intakeDesc: "ત્રણ વિગતો, અને તારાઓ તમારું ભવિષ્ય ગોઠવવાનું શરૂ કરશે.",
+    fullName: "પૂરું નામ",
+    dateOfBirth: "જન્મ તારીખ",
+    placeOfBirth: "જન્મ સ્થળ",
+    timeOfBirth: "જન્મ સમય",
+    namePlaceholder: "દા.ત. આરિયા નાઇટિંગેલ",
+    placePlaceholder: "દા.ત. પુણે, ભારત",
+    fillAll: "કૃપા કરીને બધી માહિતી ભરો.",
+    revealPath: "મારો માર્ગ બતાવો",
+    aligning: "તારાઓ ગોઠવાઈ રહ્યા છે...",
+    wheelTitle: "ભાગ્ય ચક્ર",
+    wheelOrbits: "08 કક્ષા",
+    spinBtn: "ફેરવો",
+    spinning: "ફરી રહ્યું છે",
+    heroPlayground: "તમારી કુંડળી જાણો",
+    heroTitle1: "નિયતિનું ચક્ર ફેરવો.",
+    heroTitle2: "તમારા માર્ગ સાથે જોડાઓ.",
+    heroDesc: "બ્રહ્માંડીય ઊર્જા એકત્રિત કરો અને તમારા વ્યક્તિગત AI જ્યોતિષી પાસેથી માર્ગદર્શન મેળવો.",
+    chatTitle: "AI જ્યોતિષી",
+    chatSubtitle: "તમારો વિશ્વસનીય જ્યોતિષી",
+    chatGreeting: "નમસ્તે {name}. તમારી ઊર્જા {target} પર પહોંચી છે. તમારો પ્રશ્ન પૂછો.",
+    chatInput: "તમારા ભવિષ્ય વિશે પૂછો...",
+    chatLocked: "ચેનલ બંધ છે",
+    chatSend: "મોકલો",
+    chatError: "સંપર્ક તૂટી ગયો. કૃપા કરીને ફરી પ્રયાસ કરો.",
+    energy: "પોઇન્ટ્સ",
+    channelMsg1: "તમને ",
+    channelMsg2: " ઊર્જા મળી",
+    channelFail: "તારાઓ શાંત રહ્યા. ફરી પ્રયાસ કરો.",
+    lockMsg1: "બ્રહ્માંડ સાથેની તમારી ખાનગી ચેનલ અહીં દેખાશે.",
+    lockMsg2: "તમારો પ્રશ્ન પૂછતા પહેલા {remaining} વધુ પોઇન્ટ્સ, ફેરવતા રહો!"
+  }
+};
+
+const LanguageContext = React.createContext();
+
+const SEGMENTS = [
+  { value: 500, label: "500", color: "#c9946b", weight: 1 },
+  { value: 0, label: "0", color: "#1c1a2e", weight: 8 },
+  { value: 5, label: "5", color: "#221f38", weight: 12 },
+  { value: 10, label: "10", color: "#1c1a2e", weight: 30 },
+  { value: 20, label: "20", color: "#221f38", weight: 30 },
+  { value: 50, label: "50", color: "#2a2542", weight: 30 },
+  { value: 100, label: "100", color: "#332a4f", weight: 6 },
+  { value: 200, label: "200", color: "#8b6f7a", weight: 3 },
+];
+
+const SEGMENT_ANGLE = 360 / SEGMENTS.length;
+
+function pickWeightedSegment() {
+  const total = SEGMENTS.reduce((s, seg) => s + seg.weight, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < SEGMENTS.length; i++) {
+    r -= SEGMENTS[i].weight;
+    if (r <= 0) return i;
+  }
+  return 0;
+}
+
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const a = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+}
+
+function arcPath(cx, cy, r, startAngle, endAngle) {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArc = endAngle - startAngle <= 180 ? "0" : "1";
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+}
+
+/* ---------------------------------------------------------------------------
+   Global styles — refined motion system + reduced-motion
+--------------------------------------------------------------------------- */
+function GlobalStyles() {
+  return (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+      .astrowheel-root { font-family: 'Outfit', system-ui, sans-serif; color: #f0eef7; }
+      .font-display { font-family: 'Space Grotesk', 'Outfit', sans-serif; }
+      .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+      @keyframes twinkle {
+        0%, 100% { opacity: .12; }
+        50% { opacity: .85; }
+      }
+      @keyframes shootingStar {
+        0% { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 0; }
+        3% { opacity: .95; }
+        18% { transform: translateX(-420px) translateY(420px) rotate(-45deg); opacity: 0; }
+        100% { transform: translateX(-420px) translateY(420px) rotate(-45deg); opacity: 0; }
+      }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.92) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+      @keyframes borderRotate {
+        0% { --a: 0deg; }
+        100% { --a: 360deg; }
+      }
+      @keyframes borderShimmer {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+      }
+      @keyframes softPulse {
+        0%, 100% { opacity: .45; transform: scale(1); }
+        50% { opacity: .85; transform: scale(1.05); }
+      }
+      @keyframes dotPulse {
+        0%, 80%, 100% { opacity: .25; transform: translateY(0); }
+        40% { opacity: 1; transform: translateY(-3px); }
+      }
+      @keyframes idleSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .anim-idle-spin { animation: idleSpin 140s linear infinite; }
+      @keyframes glassReveal {
+        from { opacity: 0; transform: scale(1.04) translateY(22px); filter: blur(12px); }
+        to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
+      }
+      @keyframes starDrift {
+        from { transform: translateY(0); }
+        to { transform: translateY(-40px); }
+      }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(5px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(3px); }
+      }
+      @keyframes ripple {
+        0% { box-shadow: 0 0 0 0 rgba(232,184,102,0.55); }
+        100% { box-shadow: 0 0 0 36px rgba(232,184,102,0); }
+      }
+      @keyframes resultPop {
+        0% { opacity: 0; transform: scale(0.7) translateY(8px); }
+        55% { opacity: 1; transform: scale(1.08) translateY(-2px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+      }
+      @keyframes spinBtnPress {
+        0% { transform: translate(-50%, -50%) scale(1); }
+        40% { transform: translate(-50%, -50%) scale(0.9); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+      }
+      @keyframes wheelGlowPulse {
+        0%, 100% { opacity: 0.35; }
+        50% { opacity: 0.7; }
+      }
+      @keyframes pointerBounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(3px); }
+      }
+      @keyframes unlockPulse {
+        0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+        70% { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+      }
+      @keyframes floatOrb {
+        0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; }
+        50% { transform: translateY(-10px) scale(1.08); opacity: 0.9; }
+      }
+      @keyframes ringBreath {
+        0%, 100% { transform: scale(1); opacity: 0.55; }
+        50% { transform: scale(1.04); opacity: 1; }
+      }
+      @keyframes heroLine {
+        from { width: 0; opacity: 0; }
+        to { width: 48px; opacity: 1; }
+      }
+      @keyframes tickPulse {
+        0%, 100% { opacity: 0.35; }
+        50% { opacity: 0.9; }
+      }
+      @keyframes winFlash {
+        0% { background: rgba(232,184,102,0); }
+        30% { background: rgba(232,184,102,0.18); }
+        100% { background: rgba(232,184,102,0.08); }
+      }
+      @keyframes spinHint {
+        0%, 100% { opacity: 0.45; transform: translateY(0); }
+        50% { opacity: 1; transform: translateY(-2px); }
+      }
+      @keyframes nebulaDrift {
+        0% { transform: translate(-2%, -1%) scale(1); opacity: 0.5; }
+        50% { transform: translate(2%, 1%) scale(1.06); opacity: 0.75; }
+        100% { transform: translate(-2%, -1%) scale(1); opacity: 0.5; }
+      }
+      @keyframes auroraSweep {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+      }
+      @keyframes msgSlideIn {
+        from { opacity: 0; transform: translateY(12px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes progressShine {
+        0% { background-position: -100% 0; }
+        100% { background-position: 200% 0; }
+      }
+      @keyframes headerGlow {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 0.85; }
+      }
+      @keyframes unlockBurst {
+        0% { transform: scale(0.6); opacity: 0; }
+        40% { transform: scale(1.15); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      @keyframes chatUnlockGlow {
+        0% { box-shadow: 0 0 0 0 rgba(139,123,255,0.5); border-color: rgba(139,123,255,0.15); }
+        40% { box-shadow: 0 0 40px rgba(139,123,255,0.35); border-color: rgba(139,123,255,0.5); }
+        100% { box-shadow: 0 12px 48px rgba(0,0,0,0.35), 0 0 40px rgba(139,123,255,0.08); border-color: rgba(139,123,255,0.2); }
+      }
+      @keyframes scoreBump {
+        0% { transform: scale(1); }
+        35% { transform: scale(1.18); }
+        100% { transform: scale(1); }
+      }
+      @keyframes modalOrb {
+        0%, 100% { transform: translate(0,0) scale(1); opacity: 0.35; }
+        50% { transform: translate(8px,-12px) scale(1.15); opacity: 0.6; }
+      }
+      @keyframes pageEnter {
+        from { opacity: 0; filter: blur(8px); }
+        to { opacity: 1; filter: blur(0); }
+      }
+
+      .anim-fade-up { animation: fadeUp .65s cubic-bezier(.2,.8,.2,1) both; }
+      .anim-fade-in { animation: fadeIn .45s ease both; }
+      .anim-glass-reveal { animation: glassReveal 0.75s cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .anim-shake { animation: shake .45s ease; }
+      .anim-ripple { animation: ripple 1s ease-out; }
+      .anim-result-pop { animation: resultPop 0.55s cubic-bezier(0.22, 1.2, 0.36, 1) both; }
+      .anim-spin-press { animation: spinBtnPress 0.28s ease; }
+      .anim-float-orb { animation: floatOrb 4.5s ease-in-out infinite; }
+      .anim-ring-breath { animation: ringBreath 3.2s ease-in-out infinite; }
+      .anim-hero-line { animation: heroLine 0.9s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
+      .anim-spin-hint { animation: spinHint 2.4s ease-in-out infinite; }
+      .anim-win-flash { animation: winFlash 1.2s ease-out both; }
+      .anim-msg-in { animation: msgSlideIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+      .anim-score-bump { animation: scoreBump 0.45s cubic-bezier(0.22,1.4,0.36,1); }
+      .anim-unlock-burst { animation: unlockBurst 0.6s cubic-bezier(0.22,1.2,0.36,1) both; }
+      .anim-chat-unlock { animation: chatUnlockGlow 1.4s ease-out both; }
+      .anim-page-enter { animation: pageEnter 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+
+      .card {
+        background: linear-gradient(165deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+      }
+      .card-blur {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .card-wheel {
+        background:
+          radial-gradient(ellipse at 50% 0%, rgba(139,123,255,0.08) 0%, transparent 55%),
+          linear-gradient(165deg, rgba(255,255,255,0.07), rgba(255,255,255,0.015));
+        border: 1px solid rgba(232,184,102,0.18);
+        box-shadow:
+          0 12px 48px rgba(0,0,0,0.4),
+          0 0 0 1px rgba(255,255,255,0.04) inset,
+          0 0 60px rgba(139,123,255,0.06);
+      }
+      .text-gold { color: ${TOKENS.gold}; }
+      .text-gradient-gold {
+        background: linear-gradient(90deg, #e8b866, #f7e2b3, #e8b866);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+      .text-gradient-violet {
+        background: linear-gradient(90deg, #8b7bff, #b6a9ff);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+
+      .glow-border {
+        position: relative;
+        border-radius: 28px;
+        background: #0a0a12;
+      }
+      .glow-border::before {
+        content: '';
+        position: absolute;
+        inset: -1.5px;
+        border-radius: 29.5px;
+        background: conic-gradient(from var(--a, 0deg), rgba(232,184,102,0.9), rgba(139,123,255,0.12) 28%, rgba(139,123,255,0.65) 55%, rgba(232,184,102,0.12) 78%, rgba(232,184,102,0.9));
+        animation: borderRotate 8s linear infinite;
+        z-index: -1;
+      }
+      .btn-shimmer {
+        background: linear-gradient(90deg, #cf9a67, #e8b866, #f7e2b3, #e8b866, #cf9a67);
+        background-size: 300% 100%;
+        animation: borderShimmer 5.5s linear infinite;
+      }
+      .wheel-transition { transition: transform 8.5s cubic-bezier(0.12, 0.85, 0.15, 1); }
+      .scroll-thin::-webkit-scrollbar { width: 5px; }
+      .scroll-thin::-webkit-scrollbar-thumb { background: rgba(139,123,255,0.35); border-radius: 999px; }
+      .scroll-thin::-webkit-scrollbar-track { background: transparent; }
+
+      input:focus, button:focus-visible, select:focus-visible { outline: none; }
+      button:focus-visible, select:focus-visible, .input-glow:focus-within {
+        box-shadow: 0 0 0 2px rgba(232,184,102,0.45);
+      }
+      .input-glow { transition: box-shadow .2s ease, border-color .2s ease; }
+      .input-glow:focus-within {
+        box-shadow: 0 0 0 1px rgba(232,184,102,0.45), 0 0 20px rgba(232,184,102,0.16);
+        border-color: rgba(232,184,102,0.55) !important;
+      }
+      .input-error { border-color: rgba(244,114,182,0.65) !important; }
+
+      ::selection { background: rgba(139,123,255,0.35); }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .anim-idle-spin,
+        .anim-fade-up,
+        .anim-fade-in,
+        .anim-glass-reveal,
+        .anim-shake,
+        .anim-ripple,
+        .anim-result-pop,
+        .anim-spin-press,
+        .anim-float-orb,
+        .anim-ring-breath,
+        .anim-hero-line,
+        .anim-spin-hint,
+        .anim-win-flash,
+        .anim-msg-in,
+        .anim-score-bump,
+        .anim-unlock-burst,
+        .anim-chat-unlock,
+        .anim-page-enter,
+        .btn-shimmer,
+        .glow-border::before,
+        .wheel-transition {
+          animation: none !important;
+          transition: none !important;
+        }
+        .wheel-transition { transition: transform 0.01s linear !important; }
+      }
+
+      /* Mobile safe areas */
+      @supports (padding: env(safe-area-inset-bottom)) {
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+      }
+    `}</style>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   SpaceBackground — quieter, more intentional starfield
+--------------------------------------------------------------------------- */
+function SpaceBackground() {
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 55 }, (_, i) => ({
+        id: i,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        size: Math.random() * 1.8 + 0.4,
+        delay: Math.random() * 8,
+        duration: Math.random() * 3.5 + 2.5,
+      })),
+    []
+  );
+
+  const shootingStars = useMemo(
+    () =>
+      Array.from({ length: 3 }, (_, i) => ({
+        id: i,
+        top: 5 + Math.random() * 35,
+        left: 45 + Math.random() * 45,
+        delay: i * 8 + Math.random() * 5,
+        duration: 2.6 + Math.random() * 1.4,
+      })),
+    []
+  );
+
+  return (
+    <div
+      className="fixed inset-0 -z-10 overflow-hidden"
+      style={{ background: `radial-gradient(ellipse at 50% -10%, ${TOKENS.panel} 0%, ${TOKENS.void} 50%, #020203 100%)` }}
+      aria-hidden="true"
+    >
+      {/* Soft nebula blobs */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: "-15%",
+          left: "15%",
+          width: "55%",
+          height: "45%",
+          background: "radial-gradient(ellipse, rgba(139,123,255,0.14) 0%, transparent 70%)",
+          animation: "nebulaDrift 28s ease-in-out infinite",
+          filter: "blur(2px)",
+        }}
+      />
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: "5%",
+          right: "-5%",
+          width: "50%",
+          height: "40%",
+          background: "radial-gradient(ellipse, rgba(232,184,102,0.08) 0%, transparent 70%)",
+          animation: "nebulaDrift 34s ease-in-out infinite reverse",
+          filter: "blur(2px)",
+        }}
+      />
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: "40%",
+          left: "-10%",
+          width: "40%",
+          height: "35%",
+          background: "radial-gradient(ellipse, rgba(139,123,255,0.07) 0%, transparent 70%)",
+          animation: "nebulaDrift 40s ease-in-out infinite",
+          animationDelay: "-10s",
+        }}
+      />
+
+      {/* Aurora line near top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none opacity-60"
+        style={{
+          background: "linear-gradient(90deg, transparent, rgba(139,123,255,0.5), rgba(232,184,102,0.4), rgba(139,123,255,0.5), transparent)",
+          backgroundSize: "200% 100%",
+          animation: "auroraSweep 12s linear infinite",
+        }}
+      />
+
+      <div className="absolute inset-0" style={{ animation: "starDrift 120s linear infinite" }}>
+        {stars.map((s) => (
+          <div
+            key={s.id}
+            className="absolute rounded-full bg-white"
+            style={{
+              top: `${s.top}%`,
+              left: `${s.left}%`,
+              width: s.size,
+              height: s.size,
+              animation: `twinkle ${s.duration}s ease-in-out infinite`,
+              animationDelay: `${s.delay}s`,
+              boxShadow: s.size > 1.4 ? "0 0 4px rgba(255,255,255,0.4)" : "none",
+            }}
+          />
+        ))}
+        {shootingStars.map((s) => (
+          <div
+            key={s.id}
+            className="absolute"
+            style={{
+              top: `${s.top}%`,
+              left: `${s.left}%`,
+              animation: `shootingStar ${s.duration}s linear infinite`,
+              animationDelay: `${s.delay}s`,
+            }}
+          >
+            <div
+              style={{
+                width: 90,
+                height: 1.5,
+                background: "linear-gradient(90deg, rgba(255,255,255,0.95), rgba(232,184,102,0.4), transparent)",
+                borderRadius: 999,
+                boxShadow: "0 0 6px rgba(255,255,255,0.3)",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.55) 100%)" }}
+      />
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Confetti — same canvas system, slightly richer particles
+--------------------------------------------------------------------------- */
+function useConfetti() {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = document.createElement("canvas");
+    Object.assign(canvas.style, {
+      position: "fixed",
+      inset: "0",
+      width: "100vw",
+      height: "100vh",
+      pointerEvents: "none",
+      zIndex: "9999",
+    });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+    canvasRef.current = canvas;
+    const onResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      canvas.remove();
+    };
+  }, []);
+
+  return useCallback((originX, originY) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const colors = [TOKENS.violet, TOKENS.gold, TOKENS.copper, "#ffffff", TOKENS.goldSoft];
+    const particles = Array.from({ length: 110 }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3.5 + Math.random() * 10;
+      return {
+        x: originX,
+        y: originY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 4,
+        g: 0.24,
+        size: 2.5 + Math.random() * 4.5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life: 55 + Math.random() * 35,
+        rot: Math.random() * 360,
+        spin: (Math.random() - 0.5) * 22,
+      };
+    });
+    function tick() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      particles.forEach((p) => {
+        if (p.life <= 0) return;
+        alive = true;
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.spin;
+        p.life -= 1;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rot * Math.PI) / 180);
+        ctx.globalAlpha = Math.max(p.life / 90, 0);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.55);
+        ctx.restore();
+      });
+      if (alive) requestAnimationFrame(tick);
+      else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    tick();
+  }, []);
+}
+
+/* ---------------------------------------------------------------------------
+   UserDetailsModal
+--------------------------------------------------------------------------- */
+function UserDetailsModal({ onSubmit }) {
+  const { lang, setLang, t } = React.useContext(LanguageContext);
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [place, setPlace] = useState("");
+  const [time, setTime] = useState("");
+  const [ampm, setAmpm] = useState("AM");
+  const [errors, setErrors] = useState({});
+  const [shakeKey, setShakeKey] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const minDateStr = `${now.getFullYear() - 100}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+  const validate = () => {
+    const next = {};
+    if (!name.trim()) next.name = true;
+    if (!dob.trim()) {
+      next.dob = true;
+    } else {
+      const selected = new Date(dob);
+      const minD = new Date(minDateStr);
+      const maxD = new Date(todayStr);
+      if (selected < minD || selected > maxD) next.dob = true;
+    }
+    if (!place.trim()) next.place = true;
+    if (!time.trim()) next.time = true;
+    return next;
+  };
+
+  const attemptSubmit = () => {
+    if (submitting) return;
+    const next = validate();
+    setErrors(next);
+    if (Object.keys(next).length > 0) {
+      setShakeKey((k) => k + 1);
+      return;
+    }
+    setSubmitting(true);
+    window.setTimeout(() => {
+      onSubmit({ name: name.trim(), dob: dob.trim(), place: place.trim(), time, ampm: ampm || "AM" });
+    }, 420);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    attemptSubmit();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 anim-fade-in">
+      <div
+        className="absolute inset-0"
+        style={{ background: "rgba(4,4,7,0.86)", backdropFilter: "blur(10px)" }}
+      />
+
+      <div
+        key={shakeKey}
+        className={`glow-border relative w-full max-w-[420px] anim-glass-reveal ${shakeKey ? "anim-shake" : ""}`}
+        style={{ boxShadow: "0 32px 90px rgba(0,0,0,0.7), 0 0 80px rgba(139,123,255,0.08)" }}
+      >
+        <div
+          className="relative rounded-[28px] overflow-hidden p-7 sm:p-9"
+          style={{
+            background: `linear-gradient(165deg, ${TOKENS.card} 0%, #0a0a12 60%, #0c0a14 100%)`,
+          }}
+        >
+          {/* Decorative floating orbs inside modal */}
+          <div
+            className="absolute -top-6 -right-6 w-28 h-28 rounded-full pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, rgba(232,184,102,0.2), transparent 70%)",
+              animation: "modalOrb 7s ease-in-out infinite",
+            }}
+          />
+          <div
+            className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, rgba(139,123,255,0.18), transparent 70%)",
+              animation: "modalOrb 9s ease-in-out infinite reverse",
+            }}
+          />
+
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{
+                    background: "rgba(232,184,102,0.12)",
+                    border: "1px solid rgba(232,184,102,0.3)",
+                  }}
+                >
+                  <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
+                </div>
+                <span
+                  className="font-mono text-[11px] uppercase tracking-[0.22em]"
+                  style={{ color: TOKENS.gold }}
+                >
+                  {t.intakeTitle}
+                </span>
+              </div>
+              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-black/40 border border-white/10 rounded-xl px-2 py-1 text-xs font-display cursor-pointer hover:border-white/20 transition-colors">
+                {Object.entries(TRANSLATIONS).map(([key, val]) => (
+                  <option key={key} value={key} className="bg-[#0a0a12]">{val.langName}</option>
+                ))}
+              </select>
+            </div>
+
+            <h1 className="font-display text-[1.85rem] sm:text-[2.1rem] font-semibold leading-[1.15] tracking-tight">
+              {t.intakeHeading.split(" ")[0]}{" "}
+              <span className="text-gradient-gold">
+                {t.intakeHeading.split(" ").slice(1).join(" ")}
+              </span>
+            </h1>
+            <p className="text-sm mt-2.5 mb-7 leading-relaxed" style={{ color: TOKENS.mist }}>
+              {t.intakeDesc}
+            </p>
+
+            <div className="space-y-3.5">
+              <label className="block">
+                <span
+                  className="font-mono text-[10px] uppercase tracking-[0.18em]"
+                  style={{ color: TOKENS.mist }}
+                >
+                  {t.fullName}
+                </span>
+                <div
+                  className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${
+                    errors.name ? "input-error" : "border-white/10"
+                  }`}
+                >
+                  <User className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                  <input
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (errors.name) setErrors((er) => ({ ...er, name: false }));
+                    }}
+                    placeholder={t.namePlaceholder}
+                    className="w-full bg-transparent text-sm placeholder-white/25"
+                    autoComplete="name"
+                  />
+                </div>
+              </label>
+
+              <label className="block anim-fade-up" style={{ animationDelay: ".12s" }}>
+                <span
+                  className="font-mono text-[10px] uppercase tracking-[0.18em]"
+                  style={{ color: TOKENS.mist }}
+                >
+                  {t.dateOfBirth}
+                </span>
+                <div
+                  className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${
+                    errors.dob ? "input-error" : "border-white/10"
+                  }`}
+                >
+                  <MapPin className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                  <input
+                    type="date"
+                    value={dob}
+                    min={minDateStr}
+                    max={todayStr}
+                    onChange={(e) => {
+                      setDob(e.target.value);
+                      if (errors.dob) setErrors((er) => ({ ...er, dob: false }));
+                    }}
+                    className="w-full bg-transparent text-sm placeholder-white/25"
+                  />
+                </div>
+              </label>
+
+              <label className="block anim-fade-up" style={{ animationDelay: ".18s" }}>
+                <span
+                  className="font-mono text-[10px] uppercase tracking-[0.18em]"
+                  style={{ color: TOKENS.mist }}
+                >
+                  {t.placeOfBirth}
+                </span>
+                <div
+                  className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${
+                    errors.place ? "input-error" : "border-white/10"
+                  }`}
+                >
+                  <MapPin className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                  <input
+                    value={place}
+                    onChange={(e) => {
+                      setPlace(e.target.value);
+                      if (errors.place) setErrors((er) => ({ ...er, place: false }));
+                    }}
+                    placeholder={t.placePlaceholder}
+                    className="w-full bg-transparent text-sm placeholder-white/25"
+                  />
+                </div>
+              </label>
+
+              <label className="block anim-fade-up" style={{ animationDelay: ".24s" }}>
+                <span
+                  className="font-mono text-[10px] uppercase tracking-[0.18em]"
+                  style={{ color: TOKENS.mist }}
+                >
+                  {t.timeOfBirth}
+                </span>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div
+                    className={`input-glow flex-1 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${
+                      errors.time ? "input-error" : "border-white/10"
+                    }`}
+                  >
+                    <Clock className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                    <input
+                      type="time"
+                      value={time}
+                      onChange={(e) => {
+                        setTime(e.target.value);
+                        if (errors.time) setErrors((er) => ({ ...er, time: false }));
+                      }}
+                      className="w-full bg-transparent text-sm"
+                    />
+                  </div>
+                  <select
+                    value={ampm}
+                    onChange={(e) => setAmpm(e.target.value)}
+                    className="input-glow rounded-xl px-3 py-3 bg-black/30 border border-white/10 text-sm"
+                  >
+                    <option>AM</option>
+                    <option>PM</option>
+                  </select>
+                </div>
+              </label>
+
+              {Object.keys(errors).some((k) => errors[k]) && (
+                <p className="text-xs pl-1" style={{ color: "#f472b6" }}>
+                  {t.fillAll}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={attemptSubmit}
+              disabled={submitting}
+              className="btn-shimmer w-full mt-7 rounded-xl py-3.5 font-display font-semibold text-sm tracking-wide text-black flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.97] disabled:opacity-70 disabled:pointer-events-none"
+              style={{ boxShadow: "0 10px 32px rgba(232,184,102,0.28)" }}
+            >
+              {submitting ? (
+                <>
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+                  {t.aligning}
+                </>
+              ) : (
+                <>
+                  {t.revealPath}
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+        <form onSubmit={handleFormSubmit} className="sr-only" aria-hidden="true">
+          <button type="submit">submit</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Header
+--------------------------------------------------------------------------- */
+function Header({ points, target }) {
+  const { lang, setLang, t } = React.useContext(LanguageContext);
+  const pct = Math.min(100, (points / target) * 100);
+  const [bump, setBump] = useState(false);
+  const prevPoints = useRef(points);
+
+  useEffect(() => {
+    if (points !== prevPoints.current) {
+      setBump(true);
+      const id = window.setTimeout(() => setBump(false), 450);
+      prevPoints.current = points;
+      return () => clearTimeout(id);
+    }
+  }, [points]);
+
+  return (
+    <header className="anim-fade-up relative">
+      {/* Soft top aurora under header */}
+      <div
+        className="absolute inset-x-0 top-0 h-24 pointer-events-none -z-10"
+        style={{
+          background: "linear-gradient(180deg, rgba(139,123,255,0.06) 0%, transparent 100%)",
+        }}
+      />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-7 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(232,184,102,0.2), rgba(139,123,255,0.15))",
+                border: "1px solid rgba(232,184,102,0.3)",
+                boxShadow: "0 0 16px rgba(232,184,102,0.15)",
+              }}
+            >
+              <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
+            </div>
+            <span className="font-display text-base sm:text-lg font-semibold tracking-tight truncate">
+              Astro<span className="text-gold">Wheel</span>
+            </span>
+          </div>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value)}
+            className="bg-black/50 border border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-display cursor-pointer hover:border-white/25 transition-all hover:bg-black/60"
+            aria-label="Language"
+          >
+            {Object.entries(TRANSLATIONS).map(([key, val]) => (
+              <option key={key} value={key} className="bg-[#0a0a12]">
+                {val.langName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div
+          className="card w-full sm:w-auto rounded-2xl px-3 sm:px-4 py-2.5 min-w-[148px] sm:min-w-[210px]"
+            style={{
+              border: "1px solid rgba(232,184,102,0.15)",
+              background: "linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div
+                className="flex items-center gap-1.5 font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.16em]"
+                style={{ color: TOKENS.mist }}
+              >
+                <Zap className="w-3 h-3" style={{ color: TOKENS.gold }} />
+                {t.energy}
+              </div>
+              <div className={`font-mono text-xs ${bump ? "anim-score-bump" : ""}`}>
+                <span className="text-gold font-semibold">{points}</span>
+                <span style={{ color: TOKENS.mist }}> / {target}</span>
+              </div>
+            </div>
+            <div className="h-[4px] rounded-full bg-white/10 mt-2 overflow-hidden relative">
+              <div
+                className="h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden"
+                style={{
+                  width: `${pct}%`,
+                  background: `linear-gradient(90deg, ${TOKENS.copper}, ${TOKENS.gold}, ${TOKENS.goldSoft})`,
+                  boxShadow: pct > 0 ? "0 0 10px rgba(232,184,102,0.4)" : "none",
+                }}
+              >
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)",
+                    backgroundSize: "200% 100%",
+                    animation: "progressShine 2.5s linear infinite",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Hero — typographic intro (was empty; now visible and purposeful)
+--------------------------------------------------------------------------- */
+function Hero() {
+  return <div className="h-4 sm:h-8"></div>;
+}
+
+/* ---------------------------------------------------------------------------
+   FortuneWheel — primary visual focus
+--------------------------------------------------------------------------- */
+function FortuneWheel({ onWin, spinsUsed }) {
+  const { t } = React.useContext(LanguageContext);
+  const [rotation, setRotation] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+  const [lastWin, setLastWin] = useState(null);
+  const [pressAnim, setPressAnim] = useState(false);
+  const wheelBtnRef = useRef(null);
+  const confettiBurst = useConfetti();
+
+  const size = 440;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - 10;
+
+  const handleSpin = () => {
+    if (spinning) return;
+    setPressAnim(true);
+    window.setTimeout(() => setPressAnim(false), 280);
+    setSpinning(true);
+    setLastWin(null);
+
+    const winnerIndex = pickWeightedSegment();
+    const segCenter = winnerIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+    const fullSpins = 6 + Math.floor(Math.random() * 3);
+    const currentMod = ((rotation % 360) + 360) % 360;
+    const targetMod = (360 - segCenter) % 360;
+    let delta = targetMod - currentMod;
+    if (delta < 0) delta += 360;
+    const nextRotation = rotation + fullSpins * 360 + delta;
+    setRotation(nextRotation);
+
+    window.setTimeout(() => {
+      setSpinning(false);
+      const won = SEGMENTS[winnerIndex].value;
+      setLastWin(won);
+      if (won > 0 && wheelBtnRef.current) {
+        const rect = wheelBtnRef.current.getBoundingClientRect();
+        confettiBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
+      onWin(won);
+    }, 8600);
+  };
+
+  return (
+    <div
+      className={`card-wheel card-blur rounded-3xl p-5 sm:p-7 lg:p-8 flex flex-col items-center anim-fade-up ${
+        lastWin !== null && lastWin > 0 ? "anim-win-flash" : ""
+      }`}
+      style={{ animationDelay: ".08s" }}
+    >
+      {/* Title row */}
+      <div className="self-start w-full mb-4 sm:mb-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{
+              background: "rgba(232,184,102,0.1)",
+              border: "1px solid rgba(232,184,102,0.25)",
+            }}
+          >
+            <Star className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
+          </div>
+          <div>
+            <div
+              className="font-mono text-sm sm:text-base uppercase tracking-[0.14em] font-bold"
+              style={{ color: "#c8c6d4" }}
+            >
+              {t.wheelTitle}
+            </div>
+            <div
+              className="font-mono text-[10px] uppercase tracking-[0.2em] mt-0.5"
+              style={{ color: TOKENS.gold }}
+            >
+              {t.wheelOrbits}
+            </div>
+          </div>
+        </div>
+        {!spinning && lastWin === null && (
+          <span
+            className="hidden sm:inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest anim-spin-hint"
+            style={{ color: TOKENS.mist }}
+          >
+            <Sparkles className="w-3 h-3" style={{ color: TOKENS.gold }} />
+            {t.spinBtn}
+          </span>
+        )}
+      </div>
+
+      {/* Wheel stage */}
+      <div
+        className="relative flex justify-center items-center mx-auto"
+        style={{
+          width: "min(100%, 44vh, 420px)",
+          height: "min(100%, 44vh, 420px)",
+          maxWidth: "100%",
+        }}
+      >
+        {/* Floating energy orbs (decorative, always visible) */}
+        <div
+          className="absolute -left-2 top-1/4 w-2.5 h-2.5 rounded-full anim-float-orb pointer-events-none"
+          style={{
+            background: TOKENS.violet,
+            boxShadow: `0 0 14px ${TOKENS.violet}`,
+            animationDelay: "0s",
+          }}
+        />
+        <div
+          className="absolute -right-1 top-1/3 w-2 h-2 rounded-full anim-float-orb pointer-events-none"
+          style={{
+            background: TOKENS.gold,
+            boxShadow: `0 0 12px ${TOKENS.gold}`,
+            animationDelay: "1.2s",
+          }}
+        />
+        <div
+          className="absolute left-1/4 -bottom-1 w-1.5 h-1.5 rounded-full anim-float-orb pointer-events-none"
+          style={{
+            background: TOKENS.copper,
+            boxShadow: `0 0 10px ${TOKENS.copper}`,
+            animationDelay: "2.1s",
+          }}
+        />
+
+        {/* Pointer */}
+        <div
+          className="absolute left-1/2 z-30"
+          style={{
+            top: "-3%",
+            transform: "translateX(-50%)",
+            animation: spinning ? "pointerBounce 0.32s ease-in-out infinite" : "none",
+          }}
+        >
+          <div
+            style={{
+              width: 0,
+              height: 0,
+              borderLeft: "clamp(8px, 1.8vw, 12px) solid transparent",
+              borderRight: "clamp(8px, 1.8vw, 12px) solid transparent",
+              borderTop: `clamp(14px, 3.4vw, 22px) solid ${TOKENS.gold}`,
+              filter: "drop-shadow(0 3px 8px rgba(232,184,102,0.65))",
+            }}
+          />
+          <div
+            className="absolute left-1/2 -translate-x-1/2"
+            style={{
+              top: 2,
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: TOKENS.goldSoft,
+              boxShadow: "0 0 8px rgba(232,184,102,0.8)",
+            }}
+          />
+        </div>
+
+        {/* Outer breathing ring */}
+        <div
+          className="absolute inset-0 rounded-full pointer-events-none anim-ring-breath"
+          style={{
+            border: "1.5px solid rgba(232,184,102,0.35)",
+            boxShadow: spinning
+              ? "0 0 60px rgba(232,184,102,0.35), 0 0 100px rgba(139,123,255,0.15)"
+              : "0 0 40px rgba(232,184,102,0.18)",
+            zIndex: 0,
+          }}
+        />
+
+        {/* Ambient violet glow */}
+        <div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background: spinning
+              ? "radial-gradient(circle, rgba(139,123,255,0.35) 0%, transparent 65%)"
+              : "radial-gradient(circle, rgba(139,123,255,0.2) 0%, transparent 65%)",
+            transform: "scale(1.2)",
+            transition: "background 0.5s ease",
+            zIndex: 0,
+          }}
+        />
+
+        {/* Decorative outer ticks — SVG so they scale cleanly */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none z-[5]"
+          viewBox="0 0 100 100"
+          aria-hidden="true"
+        >
+          {Array.from({ length: 32 }).map((_, i) => {
+            const a = (i * 11.25 - 90) * (Math.PI / 180);
+            const major = i % 4 === 0;
+            const r1 = major ? 47.5 : 48.2;
+            const r2 = 49.5;
+            const x1 = 50 + r1 * Math.cos(a);
+            const y1 = 50 + r1 * Math.sin(a);
+            const x2 = 50 + r2 * Math.cos(a);
+            const y2 = 50 + r2 * Math.sin(a);
+            return (
+              <line
+                key={i}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke={major ? TOKENS.gold : "rgba(255,255,255,0.28)"}
+                strokeWidth={major ? 0.7 : 0.35}
+                opacity={spinning ? 1 : 0.65}
+              />
+            );
+          })}
+        </svg>
+
+        {/* Spinning wheel SVG */}
+        <div
+          className={`w-full h-full z-10 ${spinning ? "" : "anim-idle-spin"}`}
+          style={{ willChange: spinning ? "transform" : "auto" }}
+        >
+          <svg
+            width="100%"
+            height="100%"
+            viewBox={`0 0 ${size} ${size}`}
+            className="wheel-transition"
+            style={{ transform: `rotate(${rotation}deg)` }}
+          >
+            <defs>
+              <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="78%" stopColor={TOKENS.goldSoft} />
+                <stop offset="100%" stopColor={TOKENS.copper} />
+              </radialGradient>
+              <linearGradient id="segHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.12)" />
+                <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+              </linearGradient>
+            </defs>
+            {/* Thick gold outer ring */}
+            <circle
+              cx={cx}
+              cy={cy}
+              r={r + 9}
+              fill="none"
+              stroke="url(#ringGlow)"
+              strokeWidth="7"
+              opacity="0.95"
+            />
+            <circle
+              cx={cx}
+              cy={cy}
+              r={r + 3}
+              fill="#0b0a12"
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="1.5"
+            />
+            {SEGMENTS.map((seg, i) => {
+              const start = i * SEGMENT_ANGLE;
+              const end = start + SEGMENT_ANGLE;
+              const mid = start + SEGMENT_ANGLE / 2;
+              const labelPos = polarToCartesian(cx, cy, r * 0.62, mid);
+              const pathD = arcPath(cx, cy, r, start, end);
+              return (
+                <g key={i}>
+                  <path
+                    d={pathD}
+                    fill={seg.color}
+                    stroke="rgba(0,0,0,0.5)"
+                    strokeWidth="1.5"
+                  />
+                  <path d={pathD} fill="url(#segHighlight)" opacity="0.4" />
+                  <text
+                    x={labelPos.x}
+                    y={labelPos.y}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontFamily="Space Grotesk"
+                    fontWeight="800"
+                    fontSize={seg.value >= 200 ? 21 : 18}
+                    fill={seg.value >= 200 ? "#1c1420" : "#ffffff"}
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {seg.label}
+                  </text>
+                </g>
+              );
+            })}
+            {/* Center hub ring */}
+            <circle
+              cx={cx}
+              cy={cy}
+              r={r * 0.26}
+              fill="#0b0a12"
+              stroke={TOKENS.gold}
+              strokeWidth="3"
+            />
+            <circle
+              cx={cx}
+              cy={cy}
+              r={r * 0.26}
+              fill="none"
+              stroke="rgba(232,184,102,0.25)"
+              strokeWidth="8"
+            />
+          </svg>
+        </div>
+
+        {/* Center SPIN button */}
+        <button
+          ref={wheelBtnRef}
+          onClick={handleSpin}
+          disabled={spinning}
+          aria-label={spinning ? t.spinning : t.spinBtn}
+          className={`absolute top-1/2 left-1/2 rounded-full font-display font-bold text-[11px] sm:text-xs tracking-[0.2em] flex items-center justify-center z-20 ${
+            pressAnim ? "anim-spin-press" : ""
+          }`}
+          style={{
+            width: "clamp(60px, 19%, 88px)",
+            height: "clamp(60px, 19%, 88px)",
+            transform: "translate(-50%, -50%)",
+            background: spinning
+              ? "linear-gradient(145deg, #1a1520, #0b0a12)"
+              : "linear-gradient(145deg, #16121c, #0b0a12)",
+            border: `2.5px solid ${TOKENS.gold}`,
+            color: TOKENS.gold,
+            boxShadow: spinning
+              ? "0 0 28px rgba(232,184,102,0.55), inset 0 0 16px rgba(232,184,102,0.2)"
+              : "0 0 32px rgba(232,184,102,0.5), 0 4px 16px rgba(0,0,0,0.4)",
+            cursor: spinning ? "not-allowed" : "pointer",
+            transition: "box-shadow 0.3s ease, background 0.3s ease",
+          }}
+        >
+          {spinning ? (
+            <span className="animate-spin">
+              <Sparkles className="w-5 h-5" />
+            </span>
+          ) : (
+            t.spinBtn
+          )}
+        </button>
+      </div>
+
+      {/* Result / idle hint */}
+      <div className="mt-5 sm:mt-6 w-full flex items-center justify-center min-h-[44px]">
+        {lastWin !== null ? (
+          <div
+            key={`${lastWin}-${Date.now()}`}
+            className="anim-result-pop flex items-center gap-2.5 rounded-full px-5 py-2.5"
+            style={{
+              background:
+                lastWin > 0
+                  ? "linear-gradient(90deg, rgba(232,184,102,0.15), rgba(139,123,255,0.1))"
+                  : "rgba(255,255,255,0.04)",
+              border: `1px solid ${lastWin > 0 ? "rgba(232,184,102,0.35)" : "rgba(255,255,255,0.08)"}`,
+              boxShadow: lastWin > 0 ? "0 0 24px rgba(232,184,102,0.2)" : "none",
+            }}
+          >
+            <Sparkles
+              className="w-4 h-4 shrink-0"
+              style={{ color: lastWin > 0 ? TOKENS.gold : TOKENS.mist }}
+            />
+            <span className="font-display text-sm sm:text-[15px]">
+              {lastWin > 0 ? (
+                <>
+                  {t.channelMsg1}
+                  <span className="text-gradient-gold font-semibold">
+                    +{lastWin} {t.channelMsg2}
+                  </span>
+                </>
+              ) : (
+                <span style={{ color: TOKENS.mist }}>{t.channelFail}</span>
+              )}
+            </span>
+          </div>
+        ) : !spinning ? (
+          <p
+            className="font-mono text-[11px] uppercase tracking-[0.18em] anim-spin-hint"
+            style={{ color: TOKENS.mist }}
+          >
+            {t.spinBtn} · {t.wheelOrbits}
+          </p>
+        ) : (
+          <p
+            className="font-mono text-[11px] uppercase tracking-[0.18em]"
+            style={{ color: TOKENS.gold }}
+          >
+            {t.spinning}…
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   ChatInterface
+--------------------------------------------------------------------------- */
+function ChatInterface({ unlocked, setUnlocked, target, points, userDetails }) {
+  const { lang, t } = React.useContext(LanguageContext);
+  const userName = userDetails?.name?.split(" ")[0];
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [justUnlocked, setJustUnlocked] = useState(false);
+  const scrollRef = useRef(null);
+  const prevUnlocked = useRef(false);
+
+  useEffect(() => {
+    if (unlocked && !prevUnlocked.current) {
+      setJustUnlocked(true);
+      window.setTimeout(() => setJustUnlocked(false), 1600);
+      setMessages((m) => [
+        ...m,
+        {
+          role: "ai",
+          text: `${t.chatGreeting.replace("{name}", userName || "").replace("{target}", target)}`,
+        },
+      ]);
+    }
+    prevUnlocked.current = unlocked;
+  }, [unlocked, target, userName, t]);
+
+  useEffect(() => {
+    if (loading && scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    }
+  }, [loading, messages]);
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || loading || !unlocked) return;
+    const userQuestion = input.trim();
+    setMessages((m) => [...m, { role: "user", text: userQuestion }]);
+    setInput("");
+    setLoading(true);
+    setUnlocked(false);
+
+    try {
+      const res = await fetch("/api/astro/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: userDetails?.name || "Seeker",
+          dob: userDetails?.dob || "Unknown",
+          time: userDetails?.time || "Unknown",
+          place: userDetails?.place || "Unknown",
+          language: TRANSLATIONS[lang].langName,
+          question: userQuestion,
+        }),
+      });
+      if (!res.ok) throw new Error("API Error");
+      const data = await res.json();
+      setMessages((m) => [...m, { role: "ai", text: data.reading }]);
+    } catch (err) {
+      setMessages((m) => [...m, { role: "ai", text: t.chatError }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const remaining = Math.max(0, target - (points || 0));
+
+  return (
+    <div
+      className={`relative card card-blur rounded-3xl overflow-hidden flex flex-col anim-fade-up ${
+        justUnlocked ? "anim-chat-unlock" : ""
+      }`}
+      style={{
+        height: "min(540px, 64vh)",
+        animationDelay: ".14s",
+        border: unlocked
+          ? "1px solid rgba(74,222,128,0.25)"
+          : "1px solid rgba(139,123,255,0.18)",
+        boxShadow: unlocked
+          ? "0 12px 48px rgba(0,0,0,0.35), 0 0 50px rgba(74,222,128,0.08)"
+          : "0 12px 48px rgba(0,0,0,0.35), 0 0 40px rgba(139,123,255,0.06)",
+        transition: "border-color 0.5s ease, box-shadow 0.5s ease",
+      }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center gap-3 px-4 sm:px-5 py-3.5 border-b shrink-0"
+        style={{
+          borderColor: TOKENS.line,
+          background: unlocked
+            ? "linear-gradient(180deg, rgba(74,222,128,0.06), transparent)"
+            : "linear-gradient(180deg, rgba(139,123,255,0.05), transparent)",
+        }}
+      >
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+          style={{
+            background: unlocked ? "rgba(74,222,128,0.12)" : "rgba(139,123,255,0.12)",
+            border: `1px solid ${unlocked ? "rgba(74,222,128,0.35)" : TOKENS.violet + "55"}`,
+            transition: "all 0.4s ease",
+          }}
+        >
+          <Moon className="w-4 h-4" style={{ color: unlocked ? TOKENS.success : TOKENS.violet }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-display text-sm font-semibold truncate">{t.chatTitle}</h2>
+          <div
+            className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em]"
+            style={{ color: TOKENS.mist }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{
+                background: unlocked ? TOKENS.success : TOKENS.mist,
+                boxShadow: unlocked ? `0 0 8px ${TOKENS.success}` : "none",
+                animation: unlocked ? "unlockPulse 2s ease-out 2" : "none",
+              }}
+            />
+            {t.chatSubtitle}
+          </div>
+        </div>
+        <Sparkles className="w-4 h-4 shrink-0" style={{ color: TOKENS.gold }} />
+      </div>
+
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scroll-thin px-4 sm:px-5 py-4 space-y-3">
+        {messages.map((m, i) => (
+          <div
+            key={i}
+            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} anim-msg-in`}
+            style={{ animationDelay: `${Math.min(i * 0.04, 0.2)}s` }}
+          >
+            <div
+              className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                m.role === "user" ? "rounded-br-sm" : "rounded-bl-sm"
+              }`}
+              style={
+                m.role === "user"
+                  ? {
+                      background: `linear-gradient(135deg, ${TOKENS.violet}, #a594ff)`,
+                      color: "#0b0a12",
+                      fontWeight: 500,
+                      boxShadow: "0 4px 16px rgba(139,123,255,0.25)",
+                    }
+                  : {
+                      background: "rgba(255,255,255,0.05)",
+                      border: `1px solid ${TOKENS.line}`,
+                      boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+                    }
+              }
+            >
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div className="flex justify-start anim-msg-in">
+            <div
+              className="rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: `1px solid ${TOKENS.line}`,
+              }}
+            >
+              {[0, 1, 2].map((d) => (
+                <span
+                  key={d}
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{
+                    background: TOKENS.violet,
+                    animation: "dotPulse 1.2s ease-in-out infinite",
+                    animationDelay: `${d * 0.15}s`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      {!unlocked && messages.length > 0 ? (
+        <div
+          className="p-4 border-t shrink-0 flex flex-col items-center justify-center text-center"
+          style={{
+            borderColor: TOKENS.line,
+            background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.35))",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <Lock className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
+            <span className="text-sm font-semibold text-white">{t.chatLocked}</span>
+          </div>
+          <span className="text-xs" style={{ color: TOKENS.mist }}>
+            {t.lockMsg2.replace("{remaining}", remaining)}
+          </span>
+        </div>
+      ) : (
+        <form
+          onSubmit={handleSend}
+          className="p-3.5 sm:p-4 border-t shrink-0"
+          style={{ borderColor: TOKENS.line }}
+        >
+          <div
+            className="input-glow flex items-center gap-2 rounded-xl px-3 py-2.5 bg-black/30 border border-white/10"
+            style={
+              unlocked
+                ? { borderColor: "rgba(74,222,128,0.25)", boxShadow: "0 0 16px rgba(74,222,128,0.08)" }
+                : {}
+            }
+          >
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={!unlocked}
+              placeholder={unlocked ? t.chatInput : t.chatLocked}
+              className="flex-1 bg-transparent text-sm placeholder-white/25 disabled:cursor-not-allowed min-w-0"
+              aria-label={t.chatInput}
+            />
+            <button
+              type="submit"
+              disabled={!unlocked || !input.trim() || loading}
+              aria-label={t.chatSend}
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-30 transition-transform active:scale-90 hover:brightness-110"
+              style={{
+                background: unlocked
+                  ? `linear-gradient(135deg, ${TOKENS.gold}, ${TOKENS.copper})`
+                  : TOKENS.gold,
+                color: "#0b0a12",
+                boxShadow: unlocked ? "0 0 14px rgba(232,184,102,0.35)" : "none",
+              }}
+            >
+              <ArrowUp className="w-4 h-4" />
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Locked overlay */}
+      {!unlocked && messages.length === 0 && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 sm:px-10"
+          style={{
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            background: "rgba(7,7,11,0.62)",
+          }}
+        >
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 anim-float-orb"
+            style={{
+              border: `1px solid ${TOKENS.gold}66`,
+              background: "rgba(232,184,102,0.08)",
+              boxShadow: "0 0 30px rgba(232,184,102,0.12)",
+              animationDuration: "3.5s",
+            }}
+          >
+            <Lock className="w-6 h-6" style={{ color: TOKENS.gold }} />
+          </div>
+          <h3 className="font-display text-lg sm:text-xl font-semibold mb-2">{t.chatLocked}</h3>
+          <p className="text-sm max-w-[260px] leading-relaxed" style={{ color: TOKENS.mist }}>
+            {t.lockMsg2.replace("{remaining}", remaining)}
+          </p>
+          {/* Progress mini bar */}
+          <div className="mt-5 w-40 h-1 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${Math.min(100, ((points || 0) / target) * 100)}%`,
+                background: `linear-gradient(90deg, ${TOKENS.copper}, ${TOKENS.gold})`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   App
+--------------------------------------------------------------------------- */
+function App() {
+  const [lang, setLang] = useState("en");
+  const t = TRANSLATIONS[lang];
+  const [userDetails, setUserDetails] = useState(null);
+  const [points, setPoints] = useState(0);
+  const [target, setTarget] = useState(100);
+  const [spinsUsed, setSpinsUsed] = useState(0);
+  const [unlocked, setUnlocked] = useState(false);
+
+  const handleWin = (won) => {
+    setSpinsUsed((s) => s + 1);
+    const nextPoints = points + won;
+    setPoints(nextPoints);
+    if (nextPoints >= target && !unlocked) {
+      setUnlocked(true);
+      setTarget((t) => t + 100);
+    }
+  };
+
+  return (
+    <LanguageContext.Provider value={{ lang, setLang, t }}>
+      <div className="astrowheel-root min-h-screen w-full safe-bottom anim-page-enter">
+        <GlobalStyles />
+        <SpaceBackground />
+
+        {!userDetails && <UserDetailsModal onSubmit={setUserDetails} />}
+
+        <div
+          className={
+            userDetails
+              ? "transition-all duration-500"
+              : "pointer-events-none blur-[4px] select-none opacity-70 transition-all duration-500"
+          }
+        >
+          <Header points={points} target={target} />
+          <Hero />
+
+          <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-start">
+              <FortuneWheel onWin={handleWin} spinsUsed={spinsUsed} />
+              <ChatInterface
+                unlocked={unlocked}
+                setUnlocked={setUnlocked}
+                target={target}
+                points={points}
+                userDetails={userDetails}
+              />
+            </div>
+          </main>
+        </div>
+      </div>
+    </LanguageContext.Provider>
+  );
+}
+
+const root = createRoot(document.getElementById("root"));
+root.render(<App />);
+  </script>
+</body>
+</html>

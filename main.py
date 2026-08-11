@@ -86,7 +86,7 @@ def get_health():
 
 @app.get("/")
 def serve_index():
-    return FileResponse("website.html")
+    return FileResponse("index.html")
 
 
 

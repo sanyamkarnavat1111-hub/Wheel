@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,234 +17,247 @@
   </script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
+
 <body class="bg-[#07070b] overflow-x-hidden">
   <div id="root"></div>
   <script type="text/babel" data-type="module">
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { createRoot } from "react-dom/client";
-import {
-  User,
-  MapPin,
-  Clock,
-  Sparkles,
-  Lock,
-  ArrowUp,
-  Star,
-  Moon,
-  Zap,
-  ArrowRight,
-} from "lucide-react";
+    import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+    import { createRoot } from "react-dom/client";
+    import {
+      User,
+      MapPin,
+      Clock,
+      Sparkles,
+      Lock,
+      ArrowUp,
+      Star,
+      Moon,
+      Zap,
+      ArrowRight,
+    } from "lucide-react";
 
-/* ============================================================================
-   ASTROWHEEL v2 — restyled to match the reference screenshots: a spare,
-   typographic hero, small-caps monospace eyebrow labels, a gold/copper +
-   deep-violet palette, and a sparse (not busy) starfield.
+    /* ============================================================================
+       ASTROWHEEL v2 — restyled to match the reference screenshots: a spare,
+       typographic hero, small-caps monospace eyebrow labels, a gold/copper +
+       deep-violet palette, and a sparse (not busy) starfield.
+    
+       Implementation notes:
+       - Single-file artifact. In a real Vite project, split along the section
+         headers below into src/components/{SpaceBackground,UserDetailsModal,
+         FortuneWheel,ChatInterface}.jsx.
+       - `framer-motion` / `canvas-confetti` aren't importable in this sandbox,
+         and localStorage is disabled here — both are hand-rolled with CSS +
+         a small canvas particle system, and state lives in React only for this
+         session. Seams to swap in the real thing are marked "REAL APP:".
+       - Submit-button hardening: the modal's CTA now has BOTH a form onSubmit
+         and a button onClick fallback, validation no longer silently no-ops
+         (it shakes the invalid field and shows inline copy), and the time+AM/PM
+         pair always has a safe default so a half-filled form can't get stuck.
+       ========================================================================= */
 
-   Implementation notes:
-   - Single-file artifact. In a real Vite project, split along the section
-     headers below into src/components/{SpaceBackground,UserDetailsModal,
-     FortuneWheel,ChatInterface}.jsx.
-   - `framer-motion` / `canvas-confetti` aren't importable in this sandbox,
-     and localStorage is disabled here — both are hand-rolled with CSS +
-     a small canvas particle system, and state lives in React only for this
-     session. Seams to swap in the real thing are marked "REAL APP:".
-   - Submit-button hardening: the modal's CTA now has BOTH a form onSubmit
-     and a button onClick fallback, validation no longer silently no-ops
-     (it shakes the invalid field and shows inline copy), and the time+AM/PM
-     pair always has a safe default so a half-filled form can't get stuck.
-   ========================================================================= */
+    const TOKENS = {
+      void: "#07070b",
+      panel: "#0d0d16",
+      card: "#111119",
+      violet: "#8b7bff",
+      violetDim: "#4c3a8a",
+      copper: "#cf9a67",
+      gold: "#e8b866",
+      goldSoft: "#f3d9a4",
+      mist: "#7d7c8e",
+      line: "rgba(255,255,255,0.08)",
+    };
 
-const TOKENS = {
-  void: "#07070b",
-  panel: "#0d0d16",
-  card: "#111119",
-  violet: "#8b7bff",
-  violetDim: "#4c3a8a",
-  copper: "#cf9a67",
-  gold: "#e8b866",
-  goldSoft: "#f3d9a4",
-  mist: "#7d7c8e",
-  line: "rgba(255,255,255,0.08)",
-};
+    const TRANSLATIONS = {
+      en: {
+        langName: "English",
+        intakeTitle: "Celestial Intake",
+        intakeHeading: "Chart your path.",
+        intakeDesc: "Four details, and the stars will begin aligning your reading.",
+        fullName: "Full Name",
+        dateOfBirth: "Date of Birth",
+        placeOfBirth: "Place of Birth",
+        timeOfBirth: "Time of Birth",
+        namePlaceholder: "e.g. Aria Nightingale",
+        placePlaceholder: "e.g. Pune, India",
+        fillAll: "Fill in every field so the stars have something to work with.",
+        revealPath: "Reveal My Path",
+        aligning: "Aligning the stars...",
+        wheelTitle: "The Fortune Wheel",
+        wheelOrbits: "08 Orbits",
+        spinBtn: "SPIN",
+        spinning: "SPINNING",
+        heroPlayground: "Unlock Your Kundli Secrets",
+        heroTitle1: "Spin the wheel of destiny.",
+        heroTitle2: "Connect with your path.",
+        heroDesc: "Gather cosmic energy and seek guidance from your personal AI Astrologer.",
+        chatTitle: "AI Astrologer",
+        chatSubtitle: "Your Trusted Astrologer",
+        chatGreeting: "{name}. Your energy has reached {target}. Ask your question.",
+        chatInput: "Ask about your path...",
+        chatLocked: "Channel locked",
+        chatSend: "Send",
+        chatError: "The cosmic connection was interrupted. Please try again.",
+        energy: "Points",
+        channelMsg1: "You channeled ",
+        channelMsg2: " energy",
+        channelFail: "The stars stayed silent. Try again.",
+        lockMsg1: "Your private channel to the cosmos will appear here.",
+        lockMsg2: "{remaining} points more before you can ask your question, keep spinning!"
+      },
+      hi: {
+        langName: "हिंदी",
+        intakeTitle: "कुंडली विवरण",
+        intakeHeading: "अपना मार्ग चुनें।",
+        intakeDesc: "तीन विवरण, और सितारे आपके भविष्य को संरेखित करना शुरू कर देंगे।",
+        fullName: "पूरा नाम",
+        dateOfBirth: "जन्म तिथि",
+        placeOfBirth: "जन्म स्थान",
+        timeOfBirth: "जन्म का समय",
+        namePlaceholder: "उदा. आरिया नाइटिंगेल",
+        placePlaceholder: "उदा. पुणे, भारत",
+        fillAll: "कृपया सभी फ़ील्ड भरें।",
+        revealPath: "मेरा मार्ग दिखाएं",
+        aligning: "सितारों को संरेखित कर रहे हैं...",
+        wheelTitle: "भाग्य चक्र",
+        wheelOrbits: "08 कक्ष",
+        spinBtn: "घुमाएं",
+        spinning: "घूम रहा है",
+        heroPlayground: "अपनी कुंडली के रहस्य खोलें",
+        heroTitle1: "नियति का चक्र घुमाएं।",
+        heroTitle2: "अपने मार्ग से जुड़ें।",
+        heroDesc: "ब्रह्मांडीय ऊर्जा एकत्र करें और अपने व्यक्तिगत AI ज्योतिषी से मार्गदर्शन लें।",
+        chatTitle: "AI ज्योतिषी",
+        chatSubtitle: "आपका विश्वसनीय ज्योतिषी",
+        chatGreeting: "नमस्ते {name}। आपकी ऊर्जा {target} तक पहुँच गई है। अपना प्रश्न पूछें।",
+        chatInput: "अपने मार्ग के बारे में पूछें...",
+        chatLocked: "चैनल बंद है",
+        chatSend: "भेजें",
+        chatError: "ब्रह्मांडीय संपर्क टूट गया। कृपया पुनः प्रयास करें।",
+        energy: "अंक",
+        channelMsg1: "आपको ",
+        channelMsg2: " ऊर्जा प्राप्त हुई",
+        channelFail: "सितारे शांत रहे। पुनः प्रयास करें।",
+        lockMsg1: "ब्रह्मांड के साथ आपका निजी चैनल यहाँ दिखाई देगा।",
+        lockMsg2: "अपना प्रश्न पूछने से पहले {remaining} अधिक अंक, घुमाते रहें!"
+      },
+      mr: {
+        langName: "मराठी",
+        intakeTitle: "कुंडली तपशील",
+        intakeHeading: "तुमचा मार्ग निवडा.",
+        intakeDesc: "तीन तपशील, आणि तारे तुमचे भविष्य जुळवण्यास सुरुवात करतील.",
+        fullName: "पूर्ण नाव",
+        dateOfBirth: "जन्म तारीख",
+        placeOfBirth: "जन्म ठिकाण",
+        timeOfBirth: "जन्म वेळ",
+        namePlaceholder: "उदा. आरिया नाइटिंगेल",
+        placePlaceholder: "उदा. पुणे, भारत",
+        fillAll: "कृपया सर्व माहिती भरा.",
+        revealPath: "माझा मार्ग दाखवा",
+        aligning: "तारे जुळवत आहे...",
+        wheelTitle: "भाग्य चक्र",
+        wheelOrbits: "08 कक्षा",
+        spinBtn: "फिरवा",
+        spinning: "फिरत आहे",
+        heroPlayground: "तुमची कुंडली जाणून घ्या",
+        heroTitle1: "नियतीचे चक्र फिरवा.",
+        heroTitle2: "तुमच्या मार्गाशी जोडा.",
+        heroDesc: "वैश्विक ऊर्जा गोळा करा आणि तुमच्या वैयक्तिक AI ज्योतिषाकडून मार्गदर्शन मिळवा.",
+        chatTitle: "AI ज्योतिषी",
+        chatSubtitle: "तुमचा विश्वासू ज्योतिषी",
+        chatGreeting: "नमस्कार {name}. तुमची ऊर्जा {target} वर पोहोचली आहे. तुमचा प्रश्न विचारा.",
+        chatInput: "तुमच्या भविष्याबद्दल विचारा...",
+        chatLocked: "चॅनेल बंद आहे",
+        chatSend: "पाठवा",
+        chatError: "संपर्क तुटला. कृपया पुन्हा प्रयत्न करा.",
+        energy: "गुण",
+        channelMsg1: "तुम्हाला ",
+        channelMsg2: " ऊर्जा मिळाली",
+        channelFail: "तारे शांत राहिले. पुन्हा प्रयत्न करा.",
+        lockMsg1: "ब्रह्मांडाशी तुमचे खाजगी चॅनेल येथे दिसेल.",
+        lockMsg2: "तुमचा प्रश्न विचारण्यापूर्वी {remaining} अधिक गुण, फिरवत राहा!"
+      },
+      gu: {
+        langName: "ગુજરાતી",
+        intakeTitle: "કુંડળી વિગતો",
+        intakeHeading: "તમારો માર્ગ પસંદ કરો.",
+        intakeDesc: "ત્રણ વિગતો, અને તારાઓ તમારું ભવિષ્ય ગોઠવવાનું શરૂ કરશે.",
+        fullName: "પૂરું નામ",
+        dateOfBirth: "જન્મ તારીખ",
+        placeOfBirth: "જન્મ સ્થળ",
+        timeOfBirth: "જન્મ સમય",
+        namePlaceholder: "દા.ત. આરિયા નાઇટિંગેલ",
+        placePlaceholder: "દા.ત. પુણે, ભારત",
+        fillAll: "કૃપા કરીને બધી માહિતી ભરો.",
+        revealPath: "મારો માર્ગ બતાવો",
+        aligning: "તારાઓ ગોઠવાઈ રહ્યા છે...",
+        wheelTitle: "ભાગ્ય ચક્ર",
+        wheelOrbits: "08 કક્ષા",
+        spinBtn: "ફેરવો",
+        spinning: "ફરી રહ્યું છે",
+        heroPlayground: "તમારી કુંડળી જાણો",
+        heroTitle1: "નિયતિનું ચક્ર ફેરવો.",
+        heroTitle2: "તમારા માર્ગ સાથે જોડાઓ.",
+        heroDesc: "બ્રહ્માંડીય ઊર્જા એકત્રિત કરો અને તમારા વ્યક્તિગત AI જ્યોતિષી પાસેથી માર્ગદર્શન મેળવો.",
+        chatTitle: "AI જ્યોતિષી",
+        chatSubtitle: "તમારો વિશ્વસનીય જ્યોતિષી",
+        chatGreeting: "નમસ્તે {name}. તમારી ઊર્જા {target} પર પહોંચી છે. તમારો પ્રશ્ન પૂછો.",
+        chatInput: "તમારા ભવિષ્ય વિશે પૂછો...",
+        chatLocked: "ચેનલ બંધ છે",
+        chatSend: "મોકલો",
+        chatError: "સંપર્ક તૂટી ગયો. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        energy: "પોઇન્ટ્સ",
+        channelMsg1: "તમને ",
+        channelMsg2: " ઊર્જા મળી",
+        channelFail: "તારાઓ શાંત રહ્યા. ફરી પ્રયાસ કરો.",
+        lockMsg1: "બ્રહ્માંડ સાથેની તમારી ખાનગી ચેનલ અહીં દેખાશે.",
+        lockMsg2: "તમારો પ્રશ્ન પૂછતા પહેલા {remaining} વધુ પોઇન્ટ્સ, ફેરવતા રહો!"
+      }
+    };
 
-const TRANSLATIONS = {
-  en: {
-    langName: "English",
-    intakeTitle: "Celestial Intake",
-    intakeHeading: "Chart your path.",
-    intakeDesc: "Four details, and the stars will begin aligning your reading.",
-    fullName: "Full Name",
-    placeOfBirth: "Place of Birth",
-    timeOfBirth: "Time of Birth",
-    fillAll: "Fill in every field so the stars have something to work with.",
-    revealPath: "Reveal My Path",
-    aligning: "Aligning the stars...",
-    wheelTitle: "The Fortune Wheel",
-    wheelOrbits: "08 Orbits",
-    spinBtn: "SPIN",
-    spinning: "SPINNING",
-    heroPlayground: "Unlock Your Kundli Secrets",
-    heroTitle1: "Spin the wheel of destiny.",
-    heroTitle2: "Connect with your path.",
-    heroDesc: "Gather cosmic energy and seek guidance from your personal AI Astrologer.",
-    chatTitle: "AI Astrologer",
-    chatSubtitle: "Your Trusted Astrologer",
-    chatGreeting: "{name}. Your energy has reached {target}. Ask your question.",
-    chatInput: "Ask about your path...",
-    chatLocked: "Channel locked",
-    chatSend: "Send",
-    chatError: "The cosmic connection was interrupted. Please try again.",
-    energy: "Points",
-    channelMsg1: "You channeled ",
-    channelMsg2: " energy",
-    channelFail: "The stars stayed silent. Try again.",
-    lockMsg1: "Your private channel to the cosmos will appear here.",
-    lockMsg2: "{remaining} points more before you can ask your question, keep spinning!"
-  },
-  hi: {
-    langName: "हिंदी",
-    intakeTitle: "कुंडली विवरण",
-    intakeHeading: "अपना मार्ग चुनें।",
-    intakeDesc: "तीन विवरण, और सितारे आपके भविष्य को संरेखित करना शुरू कर देंगे।",
-    fullName: "पूरा नाम",
-    placeOfBirth: "जन्म स्थान",
-    timeOfBirth: "जन्म का समय",
-    fillAll: "कृपया सभी फ़ील्ड भरें।",
-    revealPath: "मेरा मार्ग दिखाएं",
-    aligning: "सितारों को संरेखित कर रहे हैं...",
-    wheelTitle: "भाग्य चक्र",
-    wheelOrbits: "08 कक्ष",
-    spinBtn: "घुमाएं",
-    spinning: "घूम रहा है",
-    heroPlayground: "अपनी कुंडली के रहस्य खोलें",
-    heroTitle1: "नियति का चक्र घुमाएं।",
-    heroTitle2: "अपने मार्ग से जुड़ें।",
-    heroDesc: "ब्रह्मांडीय ऊर्जा एकत्र करें और अपने व्यक्तिगत AI ज्योतिषी से मार्गदर्शन लें।",
-    chatTitle: "AI ज्योतिषी",
-    chatSubtitle: "आपका विश्वसनीय ज्योतिषी",
-    chatGreeting: "नमस्ते {name}। आपकी ऊर्जा {target} तक पहुँच गई है। अपना प्रश्न पूछें।",
-    chatInput: "अपने मार्ग के बारे में पूछें...",
-    chatLocked: "चैनल बंद है",
-    chatSend: "भेजें",
-    chatError: "ब्रह्मांडीय संपर्क टूट गया। कृपया पुनः प्रयास करें।",
-    energy: "अंक",
-    channelMsg1: "आपको ",
-    channelMsg2: " ऊर्जा प्राप्त हुई",
-    channelFail: "सितारे शांत रहे। पुनः प्रयास करें।",
-    lockMsg1: "ब्रह्मांड के साथ आपका निजी चैनल यहाँ दिखाई देगा।",
-    lockMsg2: "अपना प्रश्न पूछने से पहले {remaining} अधिक अंक, घुमाते रहें!"
-  },
-  mr: {
-    langName: "मराठी",
-    intakeTitle: "कुंडली तपशील",
-    intakeHeading: "तुमचा मार्ग निवडा.",
-    intakeDesc: "तीन तपशील, आणि तारे तुमचे भविष्य जुळवण्यास सुरुवात करतील.",
-    fullName: "पूर्ण नाव",
-    placeOfBirth: "जन्म ठिकाण",
-    timeOfBirth: "जन्म वेळ",
-    fillAll: "कृपया सर्व माहिती भरा.",
-    revealPath: "माझा मार्ग दाखवा",
-    aligning: "तारे जुळवत आहे...",
-    wheelTitle: "भाग्य चक्र",
-    wheelOrbits: "08 कक्षा",
-    spinBtn: "फिरवा",
-    spinning: "फिरत आहे",
-    heroPlayground: "तुमची कुंडली जाणून घ्या",
-    heroTitle1: "नियतीचे चक्र फिरवा.",
-    heroTitle2: "तुमच्या मार्गाशी जोडा.",
-    heroDesc: "वैश्विक ऊर्जा गोळा करा आणि तुमच्या वैयक्तिक AI ज्योतिषाकडून मार्गदर्शन मिळवा.",
-    chatTitle: "AI ज्योतिषी",
-    chatSubtitle: "तुमचा विश्वासू ज्योतिषी",
-    chatGreeting: "नमस्कार {name}. तुमची ऊर्जा {target} वर पोहोचली आहे. तुमचा प्रश्न विचारा.",
-    chatInput: "तुमच्या भविष्याबद्दल विचारा...",
-    chatLocked: "चॅनेल बंद आहे",
-    chatSend: "पाठवा",
-    chatError: "संपर्क तुटला. कृपया पुन्हा प्रयत्न करा.",
-    energy: "गुण",
-    channelMsg1: "तुम्हाला ",
-    channelMsg2: " ऊर्जा मिळाली",
-    channelFail: "तारे शांत राहिले. पुन्हा प्रयत्न करा.",
-    lockMsg1: "ब्रह्मांडाशी तुमचे खाजगी चॅनेल येथे दिसेल.",
-    lockMsg2: "तुमचा प्रश्न विचारण्यापूर्वी {remaining} अधिक गुण, फिरवत राहा!"
-  },
-  gu: {
-    langName: "ગુજરાતી",
-    intakeTitle: "કુંડળી વિગતો",
-    intakeHeading: "તમારો માર્ગ પસંદ કરો.",
-    intakeDesc: "ત્રણ વિગતો, અને તારાઓ તમારું ભવિષ્ય ગોઠવવાનું શરૂ કરશે.",
-    fullName: "પૂરું નામ",
-    placeOfBirth: "જન્મ સ્થળ",
-    timeOfBirth: "જન્મ સમય",
-    fillAll: "કૃપા કરીને બધી માહિતી ભરો.",
-    revealPath: "મારો માર્ગ બતાવો",
-    aligning: "તારાઓ ગોઠવાઈ રહ્યા છે...",
-    wheelTitle: "ભાગ્ય ચક્ર",
-    wheelOrbits: "08 કક્ષા",
-    spinBtn: "ફેરવો",
-    spinning: "ફરી રહ્યું છે",
-    heroPlayground: "તમારી કુંડળી જાણો",
-    heroTitle1: "નિયતિનું ચક્ર ફેરવો.",
-    heroTitle2: "તમારા માર્ગ સાથે જોડાઓ.",
-    heroDesc: "બ્રહ્માંડીય ઊર્જા એકત્રિત કરો અને તમારા વ્યક્તિગત AI જ્યોતિષી પાસેથી માર્ગદર્શન મેળવો.",
-    chatTitle: "AI જ્યોતિષી",
-    chatSubtitle: "તમારો વિશ્વસનીય જ્યોતિષી",
-    chatGreeting: "નમસ્તે {name}. તમારી ઊર્જા {target} પર પહોંચી છે. તમારો પ્રશ્ન પૂછો.",
-    chatInput: "તમારા ભવિષ્ય વિશે પૂછો...",
-    chatLocked: "ચેનલ બંધ છે",
-    chatSend: "મોકલો",
-    chatError: "સંપર્ક તૂટી ગયો. કૃપા કરીને ફરી પ્રયાસ કરો.",
-    energy: "પોઇન્ટ્સ",
-    channelMsg1: "તમને ",
-    channelMsg2: " ઊર્જા મળી",
-    channelFail: "તારાઓ શાંત રહ્યા. ફરી પ્રયાસ કરો.",
-    lockMsg1: "બ્રહ્માંડ સાથેની તમારી ખાનગી ચેનલ અહીં દેખાશે.",
-    lockMsg2: "તમારો પ્રશ્ન પૂછતા પહેલા {remaining} વધુ પોઇન્ટ્સ, ફેરવતા રહો!"
-  }
-};
+    const LanguageContext = React.createContext();
 
-const LanguageContext = React.createContext();
+    const SEGMENTS = [
+      { value: 500, label: "500", color: "#c9946b", weight: 1 },
+      { value: 0, label: "0", color: "#1c1a2e", weight: 8 },
+      { value: 5, label: "5", color: "#221f38", weight: 12 },
+      { value: 10, label: "10", color: "#1c1a2e", weight: 30 },
+      { value: 20, label: "20", color: "#221f38", weight: 30 },
+      { value: 50, label: "50", color: "#2a2542", weight: 30 },
+      { value: 100, label: "100", color: "#332a4f", weight: 6 },
+      { value: 200, label: "200", color: "#8b6f7a", weight: 3 },
+    ];
 
-const SEGMENTS = [
-  { value: 500, label: "500", color: "#c9946b", weight: 1 },
-  { value: 0, label: "0", color: "#1c1a2e", weight: 8 },
-  { value: 5, label: "5", color: "#221f38", weight: 12 },
-  { value: 10, label: "10", color: "#1c1a2e", weight: 30 },
-  { value: 20, label: "20", color: "#221f38", weight: 30 },
-  { value: 50, label: "50", color: "#2a2542", weight: 30 },
-  { value: 100, label: "100", color: "#332a4f", weight: 6 },
-  { value: 200, label: "200", color: "#8b6f7a", weight: 3 },
-];
+    const SEGMENT_ANGLE = 360 / SEGMENTS.length;
 
-const SEGMENT_ANGLE = 360 / SEGMENTS.length;
+    function pickWeightedSegment() {
+      const total = SEGMENTS.reduce((s, seg) => s + seg.weight, 0);
+      let r = Math.random() * total;
+      for (let i = 0; i < SEGMENTS.length; i++) {
+        r -= SEGMENTS[i].weight;
+        if (r <= 0) return i;
+      }
+      return 0;
+    }
 
-function pickWeightedSegment() {
-  const total = SEGMENTS.reduce((s, seg) => s + seg.weight, 0);
-  let r = Math.random() * total;
-  for (let i = 0; i < SEGMENTS.length; i++) {
-    r -= SEGMENTS[i].weight;
-    if (r <= 0) return i;
-  }
-  return 0;
-}
+    function polarToCartesian(cx, cy, r, angleDeg) {
+      const a = ((angleDeg - 90) * Math.PI) / 180;
+      return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+    }
 
-function polarToCartesian(cx, cy, r, angleDeg) {
-  const a = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
-}
+    function arcPath(cx, cy, r, startAngle, endAngle) {
+      const start = polarToCartesian(cx, cy, r, endAngle);
+      const end = polarToCartesian(cx, cy, r, startAngle);
+      const largeArc = endAngle - startAngle <= 180 ? "0" : "1";
+      return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+    }
 
-function arcPath(cx, cy, r, startAngle, endAngle) {
-  const start = polarToCartesian(cx, cy, r, endAngle);
-  const end = polarToCartesian(cx, cy, r, startAngle);
-  const largeArc = endAngle - startAngle <= 180 ? "0" : "1";
-  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
-}
-
-/* ---------------------------------------------------------------------------
-   Global styles
---------------------------------------------------------------------------- */
-function GlobalStyles() {
-  return (
-    <style>{`
+    /* ---------------------------------------------------------------------------
+       Global styles
+    --------------------------------------------------------------------------- */
+    function GlobalStyles() {
+      return (
+        <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
       .astrowheel-root { font-family: 'Outfit', system-ui, sans-serif; color: #f0eef7; }
@@ -374,706 +388,714 @@ function GlobalStyles() {
 
       ::selection { background: rgba(139,123,255,0.35); }
     `}</style>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   SpaceBackground — sparse, quiet starfield (no heavy nebula blobs)
---------------------------------------------------------------------------- */
-function SpaceBackground() {
-  const stars = useMemo(
-    () =>
-      Array.from({ length: 35 }, (_, i) => ({
-        id: i,
-        top: Math.random() * 100,
-        left: Math.random() * 100,
-        size: Math.random() * 1.6 + 0.6,
-        delay: Math.random() * 6,
-        duration: Math.random() * 3 + 3,
-      })),
-    []
-  );
-
-  const shootingStars = useMemo(
-    () =>
-      Array.from({ length: 2 }, (_, i) => ({
-        id: i,
-        top: Math.random() * 30,
-        left: 55 + Math.random() * 35,
-        delay: i * 9 + Math.random() * 8,
-        duration: 3 + Math.random() * 1.4,
-      })),
-    []
-  );
-
-  return (
-    <div
-      className="fixed inset-0 -z-10 overflow-hidden"
-      style={{ background: `radial-gradient(ellipse at 50% 0%, ${TOKENS.panel} 0%, ${TOKENS.void} 60%, #030304 100%)` }}
-      aria-hidden="true"
-    >
-      <div className="absolute inset-0" style={{ animation: "starDrift 100s linear infinite" }}>
-        {stars.map((s) => (
-          <div
-            key={s.id}
-            className="absolute rounded-full bg-white"
-            style={{
-              top: `${s.top}%`,
-              left: `${s.left}%`,
-              width: s.size,
-              height: s.size,
-              animation: `twinkle ${s.duration}s ease-in-out infinite`,
-              animationDelay: `${s.delay}s`,
-            }}
-          />
-        ))}
-        {shootingStars.map((s) => (
-          <div key={s.id} className="absolute" style={{ top: `${s.top}%`, left: `${s.left}%`, animation: `shootingStar ${s.duration}s linear infinite`, animationDelay: `${s.delay}s` }}>
-            <div style={{ width: 80, height: 1.5, background: "linear-gradient(90deg, rgba(255,255,255,0.9), transparent)", borderRadius: 999 }} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   Confetti — canvas particle burst (stand-in for canvas-confetti)
---------------------------------------------------------------------------- */
-function useConfetti() {
-  const canvasRef = useRef(null);
-  useEffect(() => {
-    const canvas = document.createElement("canvas");
-    Object.assign(canvas.style, { position: "fixed", inset: "0", width: "100vw", height: "100vh", pointerEvents: "none", zIndex: "9999" });
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    document.body.appendChild(canvas);
-    canvasRef.current = canvas;
-    const onResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    window.addEventListener("resize", onResize);
-    return () => { window.removeEventListener("resize", onResize); canvas.remove(); };
-  }, []);
-
-  return useCallback((originX, originY) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const colors = [TOKENS.violet, TOKENS.gold, TOKENS.copper, "#ffffff"];
-    const particles = Array.from({ length: 90 }, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 4 + Math.random() * 9;
-      return { x: originX, y: originY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 3, g: 0.22, size: 3 + Math.random() * 4, color: colors[Math.floor(Math.random() * colors.length)], life: 60 + Math.random() * 30, rot: Math.random() * 360, spin: (Math.random() - 0.5) * 20 };
-    });
-    function tick() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      let alive = false;
-      particles.forEach((p) => {
-        if (p.life <= 0) return;
-        alive = true;
-        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.spin; p.life -= 1;
-        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.rot * Math.PI) / 180);
-        ctx.globalAlpha = Math.max(p.life / 90, 0); ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-        ctx.restore();
-      });
-      if (alive) requestAnimationFrame(tick); else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      );
     }
-    tick();
-  }, []);
-}
 
-/* ---------------------------------------------------------------------------
-   UserDetailsModal — glowing conic-gradient border, mono eyebrow, staggered
-   field entrance, hardened submit (button has onClick AND form onSubmit).
---------------------------------------------------------------------------- */
-function UserDetailsModal({ onSubmit }) {
-  const { t } = React.useContext(LanguageContext);
-  const [name, setName] = useState("");
-  const [dob, setDob] = useState("");
-  const [place, setPlace] = useState("");
-  const [time, setTime] = useState("");
-  const [ampm, setAmpm] = useState("AM");
-  const [errors, setErrors] = useState({});
-  const [shakeKey, setShakeKey] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
+    /* ---------------------------------------------------------------------------
+       SpaceBackground — sparse, quiet starfield (no heavy nebula blobs)
+    --------------------------------------------------------------------------- */
+    function SpaceBackground() {
+      const stars = useMemo(
+        () =>
+          Array.from({ length: 35 }, (_, i) => ({
+            id: i,
+            top: Math.random() * 100,
+            left: Math.random() * 100,
+            size: Math.random() * 1.6 + 0.6,
+            delay: Math.random() * 6,
+            duration: Math.random() * 3 + 3,
+          })),
+        []
+      );
 
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const minDateStr = `${now.getFullYear() - 100}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const shootingStars = useMemo(
+        () =>
+          Array.from({ length: 2 }, (_, i) => ({
+            id: i,
+            top: Math.random() * 30,
+            left: 55 + Math.random() * 35,
+            delay: i * 9 + Math.random() * 8,
+            duration: 3 + Math.random() * 1.4,
+          })),
+        []
+      );
 
-  const validate = () => {
-    const next = {};
-    if (!name.trim()) next.name = true;
-    
-    if (!dob.trim()) {
-      next.dob = true;
-    } else {
-      const selected = new Date(dob);
-      const minD = new Date(minDateStr);
-      const maxD = new Date(todayStr);
-      if (selected < minD || selected > maxD) {
-        next.dob = true;
-      }
-    }
-    
-    if (!place.trim()) next.place = true;
-    if (!time.trim()) next.time = true;
-    return next;
-  };
-
-  const attemptSubmit = () => {
-    if (submitting) return;
-    const next = validate();
-    setErrors(next);
-    if (Object.keys(next).length > 0) {
-      setShakeKey((k) => k + 1);
-      return;
-    }
-    setSubmitting(true);
-    // brief ripple/settle beat before handing off, purely for polish
-    window.setTimeout(() => {
-      onSubmit({ name: name.trim(), dob: dob.trim(), place: place.trim(), time, ampm: ampm || "AM" });
-    }, 420);
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    attemptSubmit();
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 anim-fade-in">
-      <div className="absolute inset-0" style={{ background: "rgba(4,4,7,0.78)", backdropFilter: "blur(6px)" }} />
-
-      <div
-        key={shakeKey}
-        className={`glow-border relative w-full max-w-md anim-glass-reveal ${shakeKey ? "anim-shake" : ""}`}
-        style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }}
-      >
+      return (
         <div
-          className="relative rounded-[28px] overflow-hidden p-8 sm:p-10"
-          style={{ background: `linear-gradient(180deg, ${TOKENS.card}, #0a0a12)` }}
+          className="fixed inset-0 -z-10 overflow-hidden"
+          style={{ background: `radial-gradient(ellipse at 50% 0%, ${TOKENS.panel} 0%, ${TOKENS.void} 60%, #030304 100%)` }}
+          aria-hidden="true"
         >
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-5">
-              <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
-              <span className="font-mono text-[11px] uppercase tracking-[0.22em]" style={{ color: TOKENS.gold }}>
-                {t.intakeTitle}
-              </span>
-            </div>
+          <div className="absolute inset-0" style={{ animation: "starDrift 100s linear infinite" }}>
+            {stars.map((s) => (
+              <div
+                key={s.id}
+                className="absolute rounded-full bg-white"
+                style={{
+                  top: `${s.top}%`,
+                  left: `${s.left}%`,
+                  width: s.size,
+                  height: s.size,
+                  animation: `twinkle ${s.duration}s ease-in-out infinite`,
+                  animationDelay: `${s.delay}s`,
+                }}
+              />
+            ))}
+            {shootingStars.map((s) => (
+              <div key={s.id} className="absolute" style={{ top: `${s.top}%`, left: `${s.left}%`, animation: `shootingStar ${s.duration}s linear infinite`, animationDelay: `${s.delay}s` }}>
+                <div style={{ width: 80, height: 1.5, background: "linear-gradient(90deg, rgba(255,255,255,0.9), transparent)", borderRadius: 999 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
-            <h1 className="font-display text-3xl sm:text-[2.15rem] font-semibold leading-tight tracking-tight">
-              {t.intakeHeading.split(' ')[0]} <span className="text-gradient-gold">{t.intakeHeading.split(' ').slice(1).join(' ')}</span>
-            </h1>
-            <p className="text-sm mt-2.5 mb-8 leading-relaxed" style={{ color: TOKENS.mist }}>
-              {t.intakeDesc}
-            </p>
+    /* ---------------------------------------------------------------------------
+       Confetti — canvas particle burst (stand-in for canvas-confetti)
+    --------------------------------------------------------------------------- */
+    function useConfetti() {
+      const canvasRef = useRef(null);
+      useEffect(() => {
+        const canvas = document.createElement("canvas");
+        Object.assign(canvas.style, { position: "fixed", inset: "0", width: "100vw", height: "100vh", pointerEvents: "none", zIndex: "9999" });
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        document.body.appendChild(canvas);
+        canvasRef.current = canvas;
+        const onResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        window.addEventListener("resize", onResize);
+        return () => { window.removeEventListener("resize", onResize); canvas.remove(); };
+      }, []);
 
-            <div className="space-y-4">
-              <label className="block">
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
-                  Full Name
-                </span>
-                <div
-                  className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.name ? "input-error" : "border-white/10"}`}
-                >
-                  <User className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
-                  <input
-                    value={name}
-                    onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((er) => ({ ...er, name: false })); }}
-                    placeholder="e.g. Aria Nightingale"
-                    className="w-full bg-transparent text-sm placeholder-white/25"
-                  />
-                </div>
-              </label>
+      return useCallback((originX, originY) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const colors = [TOKENS.violet, TOKENS.gold, TOKENS.copper, "#ffffff"];
+        const particles = Array.from({ length: 90 }, () => {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 4 + Math.random() * 9;
+          return { x: originX, y: originY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 3, g: 0.22, size: 3 + Math.random() * 4, color: colors[Math.floor(Math.random() * colors.length)], life: 60 + Math.random() * 30, rot: Math.random() * 360, spin: (Math.random() - 0.5) * 20 };
+        });
+        function tick() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          let alive = false;
+          particles.forEach((p) => {
+            if (p.life <= 0) return;
+            alive = true;
+            p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.spin; p.life -= 1;
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.rot * Math.PI) / 180);
+            ctx.globalAlpha = Math.max(p.life / 90, 0); ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+            ctx.restore();
+          });
+          if (alive) requestAnimationFrame(tick); else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        tick();
+      }, []);
+    }
 
-              <label className="block anim-fade-up" style={{ animationDelay: ".15s" }}>
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
-                  Date of Birth
-                </span>
-                <div
-                  className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.dob ? "input-error" : "border-white/10"}`}
-                >
-                  <MapPin className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
-                  <input
-                    type="date"
-                    value={dob}
-                    min={minDateStr}
-                    max={todayStr}
-                    onChange={(e) => { setDob(e.target.value); if (errors.dob) setErrors((er) => ({ ...er, dob: false })); }}
-                    className="w-full bg-transparent text-sm placeholder-white/25"
-                  />
-                </div>
-              </label>
+    /* ---------------------------------------------------------------------------
+       UserDetailsModal — glowing conic-gradient border, mono eyebrow, staggered
+       field entrance, hardened submit (button has onClick AND form onSubmit).
+    --------------------------------------------------------------------------- */
+    function UserDetailsModal({ onSubmit }) {
+      const { lang, setLang, t } = React.useContext(LanguageContext);
+      const [name, setName] = useState("");
+      const [dob, setDob] = useState("");
+      const [place, setPlace] = useState("");
+      const [time, setTime] = useState("");
+      const [ampm, setAmpm] = useState("AM");
+      const [errors, setErrors] = useState({});
+      const [shakeKey, setShakeKey] = useState(0);
+      const [submitting, setSubmitting] = useState(false);
 
-              <label className="block anim-fade-up" style={{ animationDelay: ".2s" }}>
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
-                  Place of Birth
-                </span>
-                <div
-                  className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.place ? "input-error" : "border-white/10"}`}
-                >
-                  <MapPin className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
-                  <input
-                    value={place}
-                    onChange={(e) => { setPlace(e.target.value); if (errors.place) setErrors((er) => ({ ...er, place: false })); }}
-                    placeholder="e.g. Pune, India"
-                    className="w-full bg-transparent text-sm placeholder-white/25"
-                  />
-                </div>
-              </label>
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const minDateStr = `${now.getFullYear() - 100}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-              <label className="block anim-fade-up" style={{ animationDelay: ".25s" }}>
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
-                  Time of Birth
-                </span>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <div
-                    className={`input-glow flex-1 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.time ? "input-error" : "border-white/10"}`}
-                  >
-                    <Clock className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
-                    <input
-                      type="time"
-                      value={time}
-                      onChange={(e) => { setTime(e.target.value); if (errors.time) setErrors((er) => ({ ...er, time: false })); }}
-                      className="w-full bg-transparent text-sm"
-                    />
+      const validate = () => {
+        const next = {};
+        if (!name.trim()) next.name = true;
+
+        if (!dob.trim()) {
+          next.dob = true;
+        } else {
+          const selected = new Date(dob);
+          const minD = new Date(minDateStr);
+          const maxD = new Date(todayStr);
+          if (selected < minD || selected > maxD) {
+            next.dob = true;
+          }
+        }
+
+        if (!place.trim()) next.place = true;
+        if (!time.trim()) next.time = true;
+        return next;
+      };
+
+      const attemptSubmit = () => {
+        if (submitting) return;
+        const next = validate();
+        setErrors(next);
+        if (Object.keys(next).length > 0) {
+          setShakeKey((k) => k + 1);
+          return;
+        }
+        setSubmitting(true);
+        // brief ripple/settle beat before handing off, purely for polish
+        window.setTimeout(() => {
+          onSubmit({ name: name.trim(), dob: dob.trim(), place: place.trim(), time, ampm: ampm || "AM" });
+        }, 420);
+      };
+
+      const handleFormSubmit = (e) => {
+        e.preventDefault();
+        attemptSubmit();
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 anim-fade-in">
+          <div className="absolute inset-0" style={{ background: "rgba(4,4,7,0.78)", backdropFilter: "blur(6px)" }} />
+
+          <div
+            key={shakeKey}
+            className={`glow-border relative w-full max-w-md anim-glass-reveal ${shakeKey ? "anim-shake" : ""}`}
+            style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }}
+          >
+            <div
+              className="relative rounded-[28px] overflow-hidden p-8 sm:p-10"
+              style={{ background: `linear-gradient(180deg, ${TOKENS.card}, #0a0a12)` }}
+            >
+              <div className="relative">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
+                    <span className="font-mono text-[11px] uppercase tracking-[0.22em]" style={{ color: TOKENS.gold }}>
+                      {t.intakeTitle}
+                    </span>
                   </div>
-                  <select
-                    value={ampm}
-                    onChange={(e) => setAmpm(e.target.value)}
-                    className="input-glow rounded-xl px-3 py-3 bg-black/30 border border-white/10 text-sm"
-                  >
-                    <option>AM</option>
-                    <option>PM</option>
+                  <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-black/40 border border-white/10 rounded-xl px-2 py-1 text-xs font-display cursor-pointer hover:border-white/20 transition-colors">
+                    {Object.entries(TRANSLATIONS).map(([key, val]) => (
+                      <option key={key} value={key} className="bg-[#0a0a12]">{val.langName}</option>
+                    ))}
                   </select>
                 </div>
-              </label>
 
-              {Object.keys(errors).some((k) => errors[k]) && (
-                <p className="text-xs pl-1" style={{ color: "#f472b6" }}>
-                  {t.fillAll}
+                <h1 className="font-display text-3xl sm:text-[2.15rem] font-semibold leading-tight tracking-tight">
+                  {t.intakeHeading.split(' ')[0]} <span className="text-gradient-gold">{t.intakeHeading.split(' ').slice(1).join(' ')}</span>
+                </h1>
+                <p className="text-sm mt-2.5 mb-8 leading-relaxed" style={{ color: TOKENS.mist }}>
+                  {t.intakeDesc}
                 </p>
-              )}
-            </div>
 
-            <button
-              type="button"
-              onClick={attemptSubmit}
-              disabled={submitting}
-              className="btn-shimmer w-full mt-8 rounded-xl py-3.5 font-display font-semibold text-sm tracking-wide text-black flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(232,184,102,0.55)] active:scale-[0.98] disabled:opacity-70"
-              style={{ boxShadow: "0 10px 30px rgba(232,184,102,0.25)" }}
-            >
-              {submitting ? (
-                <>
-                  <span className="w-3.5 h-3.5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
-                  {t.aligning}
-                </>
-              ) : (
-                <>
-                  {t.revealPath}
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-        {/* invisible submit-on-enter helper, mirrors handleFormSubmit for keyboard users */}
-        <form onSubmit={handleFormSubmit} className="sr-only" aria-hidden="true">
-          <button type="submit">submit</button>
-        </form>
-      </div>
-    </div>
-  );
-}
+                <div className="space-y-4">
+                  <label className="block">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
+                      {t.fullName}
+                    </span>
+                    <div
+                      className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.name ? "input-error" : "border-white/10"}`}
+                    >
+                      <User className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                      <input
+                        value={name}
+                        onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((er) => ({ ...er, name: false })); }}
+                        placeholder={t.namePlaceholder}
+                        className="w-full bg-transparent text-sm placeholder-white/25"
+                      />
+                    </div>
+                  </label>
 
-/* ---------------------------------------------------------------------------
-   Header — logo + scoreboard (matches reference: lightning icon, mono label)
---------------------------------------------------------------------------- */
-function Header({ points, target }) {
-  const { lang, setLang, t } = React.useContext(LanguageContext);
-  const pct = Math.min(100, (points / target) * 100);
-  return (
-    <header className="anim-fade-up">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-7 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
-            <span className="font-display text-lg font-semibold tracking-tight">
-              Astro<span className="text-gold">Wheel</span>
-            </span>
-          </div>
-          <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-display cursor-pointer hover:border-white/20 transition-colors">
-            {Object.entries(TRANSLATIONS).map(([key, val]) => (
-              <option key={key} value={key} className="bg-[#0a0a12]">{val.langName}</option>
-            ))}
-          </select>
-        </div>
+                  <label className="block anim-fade-up" style={{ animationDelay: ".15s" }}>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
+                      {t.dateOfBirth}
+                    </span>
+                    <div
+                      className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.dob ? "input-error" : "border-white/10"}`}
+                    >
+                      <MapPin className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                      <input
+                        type="date"
+                        value={dob}
+                        min={minDateStr}
+                        max={todayStr}
+                        onChange={(e) => { setDob(e.target.value); if (errors.dob) setErrors((er) => ({ ...er, dob: false })); }}
+                        className="w-full bg-transparent text-sm placeholder-white/25"
+                      />
+                    </div>
+                  </label>
 
-        <div className="card w-full sm:w-auto rounded-2xl px-4 sm:px-5 py-3 min-w-[170px] sm:min-w-[220px]">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
-              <Zap className="w-3 h-3" style={{ color: TOKENS.gold }} />
-              {t.energy}
-            </div>
-            <div className="font-mono text-xs">
-              <span className="text-gold font-semibold">{points}</span>
-              <span style={{ color: TOKENS.mist }}> / {target}</span>
-            </div>
-          </div>
-          <div className="h-[3px] rounded-full bg-white/10 mt-2.5 overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${TOKENS.copper}, ${TOKENS.gold})` }}
-            />
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-}
+                  <label className="block anim-fade-up" style={{ animationDelay: ".2s" }}>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
+                      {t.placeOfBirth}
+                    </span>
+                    <div
+                      className={`input-glow mt-1.5 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.place ? "input-error" : "border-white/10"}`}
+                    >
+                      <MapPin className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                      <input
+                        value={place}
+                        onChange={(e) => { setPlace(e.target.value); if (errors.place) setErrors((er) => ({ ...er, place: false })); }}
+                        placeholder={t.placePlaceholder}
+                        className="w-full bg-transparent text-sm placeholder-white/25"
+                      />
+                    </div>
+                  </label>
 
-/* ---------------------------------------------------------------------------
-   Hero — typographic intro matching the reference
---------------------------------------------------------------------------- */
-function Hero() {
-  return <div className="h-4 sm:h-8"></div>;
-}
+                  <label className="block anim-fade-up" style={{ animationDelay: ".25s" }}>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
+                      {t.timeOfBirth}
+                    </span>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div
+                        className={`input-glow flex-1 flex items-center gap-3 rounded-xl px-4 py-3 bg-black/30 border ${errors.time ? "input-error" : "border-white/10"}`}
+                      >
+                        <Clock className="w-4 h-4 shrink-0" style={{ color: TOKENS.violet }} />
+                        <input
+                          type="time"
+                          value={time}
+                          onChange={(e) => { setTime(e.target.value); if (errors.time) setErrors((er) => ({ ...er, time: false })); }}
+                          className="w-full bg-transparent text-sm"
+                        />
+                      </div>
+                      <select
+                        value={ampm}
+                        onChange={(e) => setAmpm(e.target.value)}
+                        className="input-glow rounded-xl px-3 py-3 bg-black/30 border border-white/10 text-sm"
+                      >
+                        <option>AM</option>
+                        <option>PM</option>
+                      </select>
+                    </div>
+                  </label>
 
-/* ---------------------------------------------------------------------------
-   FortuneWheel
---------------------------------------------------------------------------- */
-function FortuneWheel({ onWin, spinsUsed }) {
-  const { t } = React.useContext(LanguageContext);
-  const [rotation, setRotation] = useState(0);
-  const [spinning, setSpinning] = useState(false);
-  const [lastWin, setLastWin] = useState(null);
-  const wheelBtnRef = useRef(null);
-  const confettiBurst = useConfetti();
+                  {Object.keys(errors).some((k) => errors[k]) && (
+                    <p className="text-xs pl-1" style={{ color: "#f472b6" }}>
+                      {t.fillAll}
+                    </p>
+                  )}
+                </div>
 
-  const size = 440;
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size / 2 - 10;
-
-  const handleSpin = () => {
-    if (spinning) return;
-    setSpinning(true);
-    setLastWin(null);
-
-    const winnerIndex = pickWeightedSegment();
-    const segCenter = winnerIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
-    const fullSpins = 6 + Math.floor(Math.random() * 3);
-    const currentMod = ((rotation % 360) + 360) % 360;
-    const targetMod = (360 - segCenter) % 360;
-    let delta = targetMod - currentMod;
-    if (delta < 0) delta += 360;
-    const nextRotation = rotation + fullSpins * 360 + delta;
-    setRotation(nextRotation);
-
-    window.setTimeout(() => {
-      setSpinning(false);
-      const won = SEGMENTS[winnerIndex].value;
-      setLastWin(won);
-      if (won > 0 && wheelBtnRef.current) {
-        const rect = wheelBtnRef.current.getBoundingClientRect();
-        confettiBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
-      }
-      onWin(won);
-    }, 8600);
-  };
-
-  return (
-    <div className="card card-blur rounded-3xl p-6 sm:p-8 flex flex-col items-center anim-fade-up" style={{ animationDelay: ".1s" }}>
-      <div className="self-start mb-8 font-mono text-base sm:text-lg uppercase tracking-[0.15em] font-bold" style={{ color: TOKENS.mist }}>
-        {t.wheelTitle} <span style={{ color: TOKENS.gold }}>· {t.wheelOrbits}</span>
-      </div>
-
-      <div className="relative flex justify-center items-center" style={{ width: 'min(100%, 45vh, 440px)', height: 'min(100%, 45vh, 440px)', margin: '0 auto' }}>
-        <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: "-3%" }}>
-          <div style={{ width: 0, height: 0, borderLeft: "clamp(6px, 1.5vw, 10px) solid transparent", borderRight: "clamp(6px, 1.5vw, 10px) solid transparent", borderTop: `clamp(12px, 3vw, 18px) solid ${TOKENS.gold}` }} />
-        </div>
-
-        <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle, rgba(139,123,255,0.2) 0%, transparent 70%)", animation: spinning ? "softPulse 0.8s infinite alternate" : "softPulse 4s infinite alternate", transform: "scale(1.2)", zIndex: -1 }}></div>
-        
-        <div className="absolute inset-3 rounded-full" style={{ boxShadow: "0 0 40px rgba(232,184,102,0.15)", zIndex: 0 }}></div>
-        
-        <div className={`w-full h-full z-10 ${spinning ? "" : "anim-idle-spin"}`}>
-          <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="wheel-transition" style={{ transform: `rotate(${rotation}deg)` }}>
-          <defs>
-            <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="85%" stopColor={TOKENS.goldSoft} />
-              <stop offset="100%" stopColor={TOKENS.copper} />
-              
-            </radialGradient>
-          </defs>
-          <circle cx={cx} cy={cy} r={r + 6} fill="none" stroke="url(#ringGlow)" strokeWidth="4" opacity="0.95" />
-          <circle cx={cx} cy={cy} r={r + 2} fill="#0b0a12" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-          {SEGMENTS.map((seg, i) => {
-            const start = i * SEGMENT_ANGLE;
-            const end = start + SEGMENT_ANGLE;
-            const mid = start + SEGMENT_ANGLE / 2;
-            const labelPos = polarToCartesian(cx, cy, r * 0.62, mid);
-            const pathD = arcPath(cx, cy, r, start, end);
-            return (
-              <g key={i}>
-                <path d={pathD} fill={seg.color} stroke="rgba(0,0,0,0.4)" strokeWidth="1" />
-                <text
-                  x={labelPos.x}
-                  y={labelPos.y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontFamily="Space Grotesk"
-                  fontWeight="800"
-                  fontSize={seg.value >= 200 ? 19 : 17}
-                  fill={seg.value >= 200 ? "#1c1420" : "#ffffff"}
+                <button
+                  type="button"
+                  onClick={attemptSubmit}
+                  disabled={submitting}
+                  className="btn-shimmer w-full mt-8 rounded-xl py-3.5 font-display font-semibold text-sm tracking-wide text-black flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(232,184,102,0.55)] active:scale-[0.98] disabled:opacity-70"
+                  style={{ boxShadow: "0 10px 30px rgba(232,184,102,0.25)" }}
                 >
-                  {seg.label}
-                </text>
-              </g>
-            );
-          })}
-          <circle cx={cx} cy={cy} r={r * 0.24} fill="#0b0a12" stroke={TOKENS.gold} strokeWidth="2" />
-          </svg>
-        </div>
-
-        <button
-          ref={wheelBtnRef}
-          onClick={handleSpin}
-          disabled={spinning}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full font-display font-bold text-xs tracking-widest flex items-center justify-center transition-transform active:scale-95 disabled:cursor-not-allowed z-10"
-          style={{
-            width: size * 0.2,
-            height: size * 0.2,
-            background: "#0b0a12",
-            border: `2px solid ${TOKENS.gold}`,
-            color: TOKENS.gold,
-            boxShadow: spinning ? "0 0 16px rgba(232,184,102,0.4)" : "0 0 22px rgba(232,184,102,0.55)",
-          }}
-        >
-          {spinning ? <span className="animate-spin"><Sparkles className="w-5 h-5" /></span> : "SPIN"}
-        </button>
-      </div>
-
-      <div className="mt-6 h-8 flex items-center">
-        {lastWin !== null && (
-          <div key={Date.now()} className="anim-pop flex items-center gap-2">
-            <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
-            <span className="font-display text-sm">
-              {lastWin > 0 ? (
-                <>{t.channelMsg1} <span className="text-gradient-gold font-semibold">+{lastWin} {t.channelMsg2}</span></>
-              ) : (
-                <span style={{ color: TOKENS.mist }}>{t.channelFail}</span>
-              )}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   ChatInterface
---------------------------------------------------------------------------- */
-const MYSTIC_REPLIES = [
-  "The alignment of Jupiter suggests a season of expansion is opening for you — say yes to the opportunity that feels slightly too big.",
-  "Your Moon is whispering about rest. The next few days favor reflection over action, even if your calendar disagrees.",
-  "Mercury's current path favors honest conversations. Something you've been holding back is ready to be said.",
-  "There's a Venus influence around close relationships this week — old bonds may resurface, asking to be renewed or released.",
-  "Saturn's discipline is on your side right now. A structure you build this month will still be standing a year from now.",
-];
-
-function ChatInterface({ unlocked, setUnlocked, target, points, userDetails }) {
-  const { lang, t } = React.useContext(LanguageContext);
-  const userName = userDetails?.name?.split(" ")[0];
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const scrollRef = useRef(null);
-  const prevUnlocked = useRef(false);
-
-  useEffect(() => {
-    if (unlocked && !prevUnlocked.current) {
-      setMessages((m) => [...m, { role: "ai", text: `${t.chatGreeting.replace('{name}', userName || '').replace('{target}', target)}` }]);
-    }
-    prevUnlocked.current = unlocked;
-  }, [unlocked, target, userName]);
-
-  useEffect(() => {
-    if (loading && scrollRef.current) {
-      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-    }
-  }, [loading]);
-
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || loading || !unlocked) return;
-    const userQuestion = input.trim();
-    setMessages((m) => [...m, { role: "user", text: userQuestion }]);
-    setInput("");
-    setLoading(true);
-    setUnlocked(false); // Lock chat after asking the question
-
-    try {
-      const res = await fetch("/api/astro/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: userDetails?.name || "Seeker",
-          dob: userDetails?.dob || "Unknown",
-          time: userDetails?.time || "Unknown",
-          place: userDetails?.place || "Unknown",
-          language: TRANSLATIONS[lang].langName,
-          question: userQuestion
-        })
-      });
-      if (!res.ok) throw new Error("API Error");
-      const data = await res.json();
-      setMessages((m) => [...m, { role: "ai", text: data.reading }]);
-    } catch (err) {
-      setMessages((m) => [...m, { role: "ai", text: "The cosmic connection was interrupted. Please try again." }]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="relative card card-blur rounded-3xl overflow-hidden flex flex-col anim-fade-up" style={{ height: "min(500px, 60vh)" }}>
-      <div className="flex items-center gap-3 px-5 py-4 border-b shrink-0" style={{ borderColor: TOKENS.line }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(139,123,255,0.12)", border: `1px solid ${TOKENS.violet}55` }}>
-          <Moon className="w-4 h-4" style={{ color: TOKENS.violet }} />
-        </div>
-        <div className="flex-1">
-          <h2 className="font-display text-sm font-semibold">{t.chatTitle}</h2>
-          <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: TOKENS.mist }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: unlocked ? "#4ade80" : TOKENS.mist }} />
-            {t.chatSubtitle}
+                  {submitting ? (
+                    <>
+                      <span className="w-3.5 h-3.5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+                      {t.aligning}
+                    </>
+                  ) : (
+                    <>
+                      {t.revealPath}
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            {/* invisible submit-on-enter helper, mirrors handleFormSubmit for keyboard users */}
+            <form onSubmit={handleFormSubmit} className="sr-only" aria-hidden="true">
+              <button type="submit">submit</button>
+            </form>
           </div>
         </div>
-        <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
-      </div>
+      );
+    }
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto scroll-thin px-5 py-4 space-y-3">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} anim-fade-in`}>
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "rounded-br-sm" : "rounded-bl-sm"}`}
-              style={m.role === "user" ? { background: TOKENS.violet, color: "#0b0a12", fontWeight: 500 } : { background: "rgba(255,255,255,0.05)", border: `1px solid ${TOKENS.line}` }}
-            >
-              {m.text}
+    /* ---------------------------------------------------------------------------
+       Header — logo + scoreboard (matches reference: lightning icon, mono label)
+    --------------------------------------------------------------------------- */
+    function Header({ points, target }) {
+      const { lang, setLang, t } = React.useContext(LanguageContext);
+      const pct = Math.min(100, (points / target) * 100);
+      return (
+        <header className="anim-fade-up">
+          <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-7 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
+                <span className="font-display text-lg font-semibold tracking-tight">
+                  Astro<span className="text-gold">Wheel</span>
+                </span>
+              </div>
+              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-display cursor-pointer hover:border-white/20 transition-colors">
+                {Object.entries(TRANSLATIONS).map(([key, val]) => (
+                  <option key={key} value={key} className="bg-[#0a0a12]">{val.langName}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="card w-full sm:w-auto rounded-2xl px-4 sm:px-5 py-3 min-w-[170px] sm:min-w-[220px]">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
+                  <Zap className="w-3 h-3" style={{ color: TOKENS.gold }} />
+                  {t.energy}
+                </div>
+                <div className="font-mono text-xs">
+                  <span className="text-gold font-semibold">{points}</span>
+                  <span style={{ color: TOKENS.mist }}> / {target}</span>
+                </div>
+              </div>
+              <div className="h-[3px] rounded-full bg-white/10 mt-2.5 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${TOKENS.copper}, ${TOKENS.gold})` }}
+                />
+              </div>
             </div>
           </div>
-        ))}
-        {loading && (
-          <div className="flex justify-start">
-            <div className="rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${TOKENS.line}` }}>
-              {[0, 1, 2].map((d) => (
-                <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/70" style={{ animation: "dotPulse 1.2s ease-in-out infinite", animationDelay: `${d * 0.15}s` }} />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        </header>
+      );
+    }
 
-      {!unlocked && messages.length > 0 ? (
-        <div className="p-4 border-t shrink-0 flex flex-col items-center justify-center text-center bg-black/40" style={{ borderColor: TOKENS.line }}>
-          <div className="flex items-center gap-2 mb-1">
-            <Lock className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
-            <span className="text-sm font-semibold text-white">{t.chatLocked}</span>
+    /* ---------------------------------------------------------------------------
+       Hero — typographic intro matching the reference
+    --------------------------------------------------------------------------- */
+    function Hero() {
+      return <div className="h-4 sm:h-8"></div>;
+    }
+
+    /* ---------------------------------------------------------------------------
+       FortuneWheel
+    --------------------------------------------------------------------------- */
+    function FortuneWheel({ onWin, spinsUsed }) {
+      const { t } = React.useContext(LanguageContext);
+      const [rotation, setRotation] = useState(0);
+      const [spinning, setSpinning] = useState(false);
+      const [lastWin, setLastWin] = useState(null);
+      const wheelBtnRef = useRef(null);
+      const confettiBurst = useConfetti();
+
+      const size = 440;
+      const cx = size / 2;
+      const cy = size / 2;
+      const r = size / 2 - 10;
+
+      const handleSpin = () => {
+        if (spinning) return;
+        setSpinning(true);
+        setLastWin(null);
+
+        const winnerIndex = pickWeightedSegment();
+        const segCenter = winnerIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+        const fullSpins = 6 + Math.floor(Math.random() * 3);
+        const currentMod = ((rotation % 360) + 360) % 360;
+        const targetMod = (360 - segCenter) % 360;
+        let delta = targetMod - currentMod;
+        if (delta < 0) delta += 360;
+        const nextRotation = rotation + fullSpins * 360 + delta;
+        setRotation(nextRotation);
+
+        window.setTimeout(() => {
+          setSpinning(false);
+          const won = SEGMENTS[winnerIndex].value;
+          setLastWin(won);
+          if (won > 0 && wheelBtnRef.current) {
+            const rect = wheelBtnRef.current.getBoundingClientRect();
+            confettiBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          }
+          onWin(won);
+        }, 8600);
+      };
+
+      return (
+        <div className="card card-blur rounded-3xl p-6 sm:p-8 flex flex-col items-center anim-fade-up" style={{ animationDelay: ".1s" }}>
+          <div className="self-start mb-8 font-mono text-base sm:text-lg uppercase tracking-[0.15em] font-bold" style={{ color: TOKENS.mist }}>
+            {t.wheelTitle} <span style={{ color: TOKENS.gold }}>· {t.wheelOrbits}</span>
           </div>
-          <span className="text-xs" style={{ color: TOKENS.mist }}>
-            {t.lockMsg2.replace('{remaining}', Math.max(0, target - (points || 0)))}
-          </span>
-        </div>
-      ) : (
-        <form onSubmit={handleSend} className="p-4 border-t shrink-0" style={{ borderColor: TOKENS.line }}>
-          <div className="input-glow flex items-center gap-2 rounded-xl px-3 py-2.5 bg-black/30 border border-white/10">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={!unlocked}
-              placeholder={unlocked ? t.chatInput : t.chatLocked}
-              className="flex-1 bg-transparent text-sm placeholder-white/25 disabled:cursor-not-allowed"
-            />
+
+          <div className="relative flex justify-center items-center" style={{ width: 'min(100%, 45vh, 440px)', height: 'min(100%, 45vh, 440px)', margin: '0 auto' }}>
+            <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: "-3%" }}>
+              <div style={{ width: 0, height: 0, borderLeft: "clamp(6px, 1.5vw, 10px) solid transparent", borderRight: "clamp(6px, 1.5vw, 10px) solid transparent", borderTop: `clamp(12px, 3vw, 18px) solid ${TOKENS.gold}` }} />
+            </div>
+
+            <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle, rgba(139,123,255,0.2) 0%, transparent 70%)", animation: spinning ? "softPulse 0.8s infinite alternate" : "softPulse 4s infinite alternate", transform: "scale(1.2)", zIndex: -1 }}></div>
+
+            <div className="absolute inset-3 rounded-full" style={{ boxShadow: "0 0 40px rgba(232,184,102,0.15)", zIndex: 0 }}></div>
+
+            <div className={`w-full h-full z-10 ${spinning ? "" : "anim-idle-spin"}`}>
+              <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="wheel-transition" style={{ transform: `rotate(${rotation}deg)` }}>
+                <defs>
+                  <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="85%" stopColor={TOKENS.goldSoft} />
+                    <stop offset="100%" stopColor={TOKENS.copper} />
+
+                  </radialGradient>
+                </defs>
+                <circle cx={cx} cy={cy} r={r + 6} fill="none" stroke="url(#ringGlow)" strokeWidth="4" opacity="0.95" />
+                <circle cx={cx} cy={cy} r={r + 2} fill="#0b0a12" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                {SEGMENTS.map((seg, i) => {
+                  const start = i * SEGMENT_ANGLE;
+                  const end = start + SEGMENT_ANGLE;
+                  const mid = start + SEGMENT_ANGLE / 2;
+                  const labelPos = polarToCartesian(cx, cy, r * 0.62, mid);
+                  const pathD = arcPath(cx, cy, r, start, end);
+                  return (
+                    <g key={i}>
+                      <path d={pathD} fill={seg.color} stroke="rgba(0,0,0,0.4)" strokeWidth="1" />
+                      <text
+                        x={labelPos.x}
+                        y={labelPos.y}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fontFamily="Space Grotesk"
+                        fontWeight="800"
+                        fontSize={seg.value >= 200 ? 19 : 17}
+                        fill={seg.value >= 200 ? "#1c1420" : "#ffffff"}
+                      >
+                        {seg.label}
+                      </text>
+                    </g>
+                  );
+                })}
+                <circle cx={cx} cy={cy} r={r * 0.24} fill="#0b0a12" stroke={TOKENS.gold} strokeWidth="2" />
+              </svg>
+            </div>
+
             <button
-              type="submit"
-              disabled={!unlocked || !input.trim() || loading}
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-30 transition-transform active:scale-90"
-              style={{ background: TOKENS.gold, color: "#0b0a12" }}
+              ref={wheelBtnRef}
+              onClick={handleSpin}
+              disabled={spinning}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full font-display font-bold text-xs tracking-widest flex items-center justify-center transition-transform active:scale-95 disabled:cursor-not-allowed z-10"
+              style={{
+                width: size * 0.2,
+                height: size * 0.2,
+                background: "#0b0a12",
+                border: `2px solid ${TOKENS.gold}`,
+                color: TOKENS.gold,
+                boxShadow: spinning ? "0 0 16px rgba(232,184,102,0.4)" : "0 0 22px rgba(232,184,102,0.55)",
+              }}
             >
-              <ArrowUp className="w-4 h-4" />
+              {spinning ? <span className="animate-spin"><Sparkles className="w-5 h-5" /></span> : "SPIN"}
             </button>
           </div>
-        </form>
-      )}
 
-      {!unlocked && messages.length === 0 && (
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center text-center px-10"
-          style={{ backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", background: "rgba(7,7,11,0.55)" }}
-        >
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ border: `1px solid ${TOKENS.gold}66`, background: "rgba(232,184,102,0.06)" }}>
-            <Lock className="w-6 h-6" style={{ color: TOKENS.gold }} />
+          <div className="mt-6 h-8 flex items-center">
+            {lastWin !== null && (
+              <div key={Date.now()} className="anim-pop flex items-center gap-2">
+                <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
+                <span className="font-display text-sm">
+                  {lastWin > 0 ? (
+                    <>{t.channelMsg1} <span className="text-gradient-gold font-semibold">+{lastWin} {t.channelMsg2}</span></>
+                  ) : (
+                    <span style={{ color: TOKENS.mist }}>{t.channelFail}</span>
+                  )}
+                </span>
+              </div>
+            )}
           </div>
-          <h3 className="font-display text-xl font-semibold mb-2">{t.chatLocked}</h3>
-          <p className="text-sm max-w-[260px] leading-relaxed" style={{ color: TOKENS.mist }}>
-            {t.lockMsg2.replace('{remaining}', Math.max(0, target - (points || 0)))}
-          </p>
         </div>
-      )}
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   App
---------------------------------------------------------------------------- */
-function App() {
-  const [lang, setLang] = useState("en");
-  const t = TRANSLATIONS[lang];
-  const [userDetails, setUserDetails] = useState(null);
-  const [points, setPoints] = useState(0);
-  const [target, setTarget] = useState(100);
-  const [spinsUsed, setSpinsUsed] = useState(0);
-  const [unlocked, setUnlocked] = useState(false);
-
-  const handleWin = (won) => {
-    setSpinsUsed((s) => s + 1);
-    const nextPoints = points + won;
-    setPoints(nextPoints);
-    if (nextPoints >= target && !unlocked) {
-      setUnlocked(true);
-      setTarget((t) => t + 100); // next milestone: 100 -> 200 -> 300 ...
+      );
     }
-  };
 
-  return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
-      <div className="astrowheel-root min-h-screen w-full overflow-x-hidden">
-      <GlobalStyles />
-      <SpaceBackground />
+    /* ---------------------------------------------------------------------------
+       ChatInterface
+    --------------------------------------------------------------------------- */
+    const MYSTIC_REPLIES = [
+      "The alignment of Jupiter suggests a season of expansion is opening for you — say yes to the opportunity that feels slightly too big.",
+      "Your Moon is whispering about rest. The next few days favor reflection over action, even if your calendar disagrees.",
+      "Mercury's current path favors honest conversations. Something you've been holding back is ready to be said.",
+      "There's a Venus influence around close relationships this week — old bonds may resurface, asking to be renewed or released.",
+      "Saturn's discipline is on your side right now. A structure you build this month will still be standing a year from now.",
+    ];
 
-      {!userDetails && <UserDetailsModal onSubmit={setUserDetails} />}
+    function ChatInterface({ unlocked, setUnlocked, target, points, userDetails }) {
+      const { lang, t } = React.useContext(LanguageContext);
+      const userName = userDetails?.name?.split(" ")[0];
+      const [messages, setMessages] = useState([]);
+      const [input, setInput] = useState("");
+      const [loading, setLoading] = useState(false);
+      const scrollRef = useRef(null);
+      const prevUnlocked = useRef(false);
 
-      <div className={userDetails ? "" : "pointer-events-none blur-sm select-none"}>
-        <Header points={points} target={target} />
-        <Hero />
+      useEffect(() => {
+        if (unlocked && !prevUnlocked.current) {
+          setMessages((m) => [...m, { role: "ai", text: `${t.chatGreeting.replace('{name}', userName || '').replace('{target}', target)}` }]);
+        }
+        prevUnlocked.current = unlocked;
+      }, [unlocked, target, userName]);
 
-        <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 items-start">
-            <FortuneWheel onWin={handleWin} spinsUsed={spinsUsed} />
-            <ChatInterface unlocked={unlocked} setUnlocked={setUnlocked} target={target} points={points} userDetails={userDetails} />
+      useEffect(() => {
+        if (loading && scrollRef.current) {
+          scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+        }
+      }, [loading]);
+
+      const handleSend = async (e) => {
+        e.preventDefault();
+        if (!input.trim() || loading || !unlocked) return;
+        const userQuestion = input.trim();
+        setMessages((m) => [...m, { role: "user", text: userQuestion }]);
+        setInput("");
+        setLoading(true);
+        setUnlocked(false); // Lock chat after asking the question
+
+        try {
+          const res = await fetch("/api/astro/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: userDetails?.name || "Seeker",
+              dob: userDetails?.dob || "Unknown",
+              time: userDetails?.time || "Unknown",
+              place: userDetails?.place || "Unknown",
+              language: TRANSLATIONS[lang].langName,
+              question: userQuestion
+            })
+          });
+          if (!res.ok) throw new Error("API Error");
+          const data = await res.json();
+          setMessages((m) => [...m, { role: "ai", text: data.reading }]);
+        } catch (err) {
+          setMessages((m) => [...m, { role: "ai", text: "The cosmic connection was interrupted. Please try again." }]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="relative card card-blur rounded-3xl overflow-hidden flex flex-col anim-fade-up" style={{ height: "min(500px, 60vh)" }}>
+          <div className="flex items-center gap-3 px-5 py-4 border-b shrink-0" style={{ borderColor: TOKENS.line }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(139,123,255,0.12)", border: `1px solid ${TOKENS.violet}55` }}>
+              <Moon className="w-4 h-4" style={{ color: TOKENS.violet }} />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-display text-sm font-semibold">{t.chatTitle}</h2>
+              <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: TOKENS.mist }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: unlocked ? "#4ade80" : TOKENS.mist }} />
+                {t.chatSubtitle}
+              </div>
+            </div>
+            <Sparkles className="w-4 h-4" style={{ color: TOKENS.gold }} />
           </div>
-        </main>
-      </div>
-    </div>
-    </LanguageContext.Provider>
-  );
-}
 
-const root = createRoot(document.getElementById("root"));
-root.render(<App />);
+          <div ref={scrollRef} className="flex-1 overflow-y-auto scroll-thin px-5 py-4 space-y-3">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} anim-fade-in`}>
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "rounded-br-sm" : "rounded-bl-sm"}`}
+                  style={m.role === "user" ? { background: TOKENS.violet, color: "#0b0a12", fontWeight: 500 } : { background: "rgba(255,255,255,0.05)", border: `1px solid ${TOKENS.line}` }}
+                >
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${TOKENS.line}` }}>
+                  {[0, 1, 2].map((d) => (
+                    <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/70" style={{ animation: "dotPulse 1.2s ease-in-out infinite", animationDelay: `${d * 0.15}s` }} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {!unlocked && messages.length > 0 ? (
+            <div className="p-4 border-t shrink-0 flex flex-col items-center justify-center text-center bg-black/40" style={{ borderColor: TOKENS.line }}>
+              <div className="flex items-center gap-2 mb-1">
+                <Lock className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
+                <span className="text-sm font-semibold text-white">{t.chatLocked}</span>
+              </div>
+              <span className="text-xs" style={{ color: TOKENS.mist }}>
+                {t.lockMsg2.replace('{remaining}', Math.max(0, target - (points || 0)))}
+              </span>
+            </div>
+          ) : (
+            <form onSubmit={handleSend} className="p-4 border-t shrink-0" style={{ borderColor: TOKENS.line }}>
+              <div className="input-glow flex items-center gap-2 rounded-xl px-3 py-2.5 bg-black/30 border border-white/10">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  disabled={!unlocked}
+                  placeholder={unlocked ? t.chatInput : t.chatLocked}
+                  className="flex-1 bg-transparent text-sm placeholder-white/25 disabled:cursor-not-allowed"
+                />
+                <button
+                  type="submit"
+                  disabled={!unlocked || !input.trim() || loading}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-30 transition-transform active:scale-90"
+                  style={{ background: TOKENS.gold, color: "#0b0a12" }}
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          )}
+
+          {!unlocked && messages.length === 0 && (
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center text-center px-10"
+              style={{ backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", background: "rgba(7,7,11,0.55)" }}
+            >
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ border: `1px solid ${TOKENS.gold}66`, background: "rgba(232,184,102,0.06)" }}>
+                <Lock className="w-6 h-6" style={{ color: TOKENS.gold }} />
+              </div>
+              <h3 className="font-display text-xl font-semibold mb-2">{t.chatLocked}</h3>
+              <p className="text-sm max-w-[260px] leading-relaxed" style={{ color: TOKENS.mist }}>
+                {t.lockMsg2.replace('{remaining}', Math.max(0, target - (points || 0)))}
+              </p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* ---------------------------------------------------------------------------
+       App
+    --------------------------------------------------------------------------- */
+    function App() {
+      const [lang, setLang] = useState("en");
+      const t = TRANSLATIONS[lang];
+      const [userDetails, setUserDetails] = useState(null);
+      const [points, setPoints] = useState(0);
+      const [target, setTarget] = useState(100);
+      const [spinsUsed, setSpinsUsed] = useState(0);
+      const [unlocked, setUnlocked] = useState(false);
+
+      const handleWin = (won) => {
+        setSpinsUsed((s) => s + 1);
+        const nextPoints = points + won;
+        setPoints(nextPoints);
+        if (nextPoints >= target && !unlocked) {
+          setUnlocked(true);
+          setTarget((t) => t + 100); // next milestone: 100 -> 200 -> 300 ...
+        }
+      };
+
+      return (
+        <LanguageContext.Provider value={{ lang, setLang, t }}>
+          <div className="astrowheel-root min-h-screen w-full overflow-x-hidden">
+            <GlobalStyles />
+            <SpaceBackground />
+
+            {!userDetails && <UserDetailsModal onSubmit={setUserDetails} />}
+
+            <div className={userDetails ? "" : "pointer-events-none blur-sm select-none"}>
+              <Header points={points} target={target} />
+              <Hero />
+
+              <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-16">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 items-start">
+                  <FortuneWheel onWin={handleWin} spinsUsed={spinsUsed} />
+                  <ChatInterface unlocked={unlocked} setUnlocked={setUnlocked} target={target} points={points} userDetails={userDetails} />
+                </div>
+              </main>
+            </div>
+          </div>
+        </LanguageContext.Provider>
+      );
+    }
+
+    const root = createRoot(document.getElementById("root"));
+    root.render(<App />);
   </script>
 </body>
+
 </html>
