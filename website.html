@@ -148,10 +148,13 @@ function GlobalStyles() {
         0%, 80%, 100% { opacity: .25; transform: translateY(0); }
         40% { opacity: 1; transform: translateY(-3px); }
       }
-      @keyframes popIn {
-        0% { opacity: 0; transform: scale(0.5) rotate(-6deg); }
-        60% { opacity: 1; transform: scale(1.07) rotate(2deg); }
-        100% { opacity: 1; transform: scale(1) rotate(0deg); }
+      @keyframes glassReveal {
+        from { opacity: 0; transform: scale(1.05) translateY(20px); filter: blur(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
+      }
+      @keyframes starDrift {
+        from { transform: translateY(0); }
+        to { transform: translateY(-50px); }
       }
       @keyframes shake {
         0%, 100% { transform: translateX(0); }
@@ -164,15 +167,10 @@ function GlobalStyles() {
         0% { box-shadow: 0 0 0 0 rgba(232,184,102,0.55); }
         100% { box-shadow: 0 0 0 40px rgba(232,184,102,0); }
       }
-      @keyframes glyphDrift {
-        0%, 100% { transform: translateY(0) rotate(0deg); opacity: .06; }
-        50% { transform: translateY(-8px) rotate(4deg); opacity: .12; }
-      }
 
       .anim-fade-up { animation: fadeUp .7s cubic-bezier(.2,.8,.2,1) both; }
       .anim-fade-in { animation: fadeIn .5s ease both; }
-      .anim-scale-in { animation: scaleIn .5s cubic-bezier(.2,.8,.2,1) both; }
-      .anim-pop { animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+      .anim-glass-reveal { animation: glassReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
       .anim-shake { animation: shake .45s ease; }
       .anim-ripple { animation: ripple 1s ease-out; }
 
@@ -267,25 +265,27 @@ function SpaceBackground() {
       style={{ background: `radial-gradient(ellipse at 50% 0%, ${TOKENS.panel} 0%, ${TOKENS.void} 60%, #030304 100%)` }}
       aria-hidden="true"
     >
-      {stars.map((s) => (
-        <div
-          key={s.id}
-          className="absolute rounded-full bg-white"
-          style={{
-            top: `${s.top}%`,
-            left: `${s.left}%`,
-            width: s.size,
-            height: s.size,
-            animation: `twinkle ${s.duration}s ease-in-out infinite`,
-            animationDelay: `${s.delay}s`,
-          }}
-        />
-      ))}
-      {shootingStars.map((s) => (
-        <div key={s.id} className="absolute" style={{ top: `${s.top}%`, left: `${s.left}%`, animation: `shootingStar ${s.duration}s linear infinite`, animationDelay: `${s.delay}s` }}>
-          <div style={{ width: 80, height: 1.5, background: "linear-gradient(90deg, rgba(255,255,255,0.9), transparent)", borderRadius: 999 }} />
-        </div>
-      ))}
+      <div className="absolute inset-0" style={{ animation: "starDrift 100s linear infinite" }}>
+        {stars.map((s) => (
+          <div
+            key={s.id}
+            className="absolute rounded-full bg-white"
+            style={{
+              top: `${s.top}%`,
+              left: `${s.left}%`,
+              width: s.size,
+              height: s.size,
+              animation: `twinkle ${s.duration}s ease-in-out infinite`,
+              animationDelay: `${s.delay}s`,
+            }}
+          />
+        ))}
+        {shootingStars.map((s) => (
+          <div key={s.id} className="absolute" style={{ top: `${s.top}%`, left: `${s.left}%`, animation: `shootingStar ${s.duration}s linear infinite`, animationDelay: `${s.delay}s` }}>
+            <div style={{ width: 80, height: 1.5, background: "linear-gradient(90deg, rgba(255,255,255,0.9), transparent)", borderRadius: 999 }} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -398,7 +398,7 @@ function UserDetailsModal({ onSubmit }) {
 
       <div
         key={shakeKey}
-        className={`glow-border relative w-full max-w-md anim-scale-in ${shakeKey ? "anim-shake" : ""}`}
+        className={`glow-border relative w-full max-w-md anim-glass-reveal ${shakeKey ? "anim-shake" : ""}`}
         style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }}
       >
         <div
@@ -424,22 +424,22 @@ function UserDetailsModal({ onSubmit }) {
           ))}
 
           <div className="relative">
-            <div className="flex items-center gap-2 mb-5 anim-fade-up" style={{ animationDelay: "0s" }}>
+            <div className="flex items-center gap-2 mb-5">
               <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
               <span className="font-mono text-[11px] uppercase tracking-[0.22em]" style={{ color: TOKENS.gold }}>
                 Celestial Intake
               </span>
             </div>
 
-            <h1 className="font-display text-3xl sm:text-[2.15rem] font-semibold leading-tight tracking-tight anim-fade-up" style={{ animationDelay: ".05s" }}>
+            <h1 className="font-display text-3xl sm:text-[2.15rem] font-semibold leading-tight tracking-tight">
               Chart your <span className="text-gradient-gold">path.</span>
             </h1>
-            <p className="text-sm mt-2.5 mb-8 leading-relaxed anim-fade-up" style={{ color: TOKENS.mist, animationDelay: ".1s" }}>
+            <p className="text-sm mt-2.5 mb-8 leading-relaxed" style={{ color: TOKENS.mist }}>
               Three details, and the stars will begin aligning your reading.
             </p>
 
             <div className="space-y-4">
-              <label className="block anim-fade-up" style={{ animationDelay: ".15s" }}>
+              <label className="block">
                 <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: TOKENS.mist }}>
                   Full Name
                 </span>
@@ -511,8 +511,8 @@ function UserDetailsModal({ onSubmit }) {
               type="button"
               onClick={attemptSubmit}
               disabled={submitting}
-              className="btn-shimmer w-full mt-8 rounded-xl py-3.5 font-display font-semibold text-sm tracking-wide text-black flex items-center justify-center gap-2 transition-transform active:scale-[0.98] hover:brightness-105 disabled:opacity-70 anim-fade-up"
-              style={{ animationDelay: ".3s", boxShadow: "0 10px 30px rgba(232,184,102,0.25)" }}
+              className="btn-shimmer w-full mt-8 rounded-xl py-3.5 font-display font-semibold text-sm tracking-wide text-black flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(232,184,102,0.55)] active:scale-[0.98] disabled:opacity-70"
+              style={{ boxShadow: "0 10px 30px rgba(232,184,102,0.25)" }}
             >
               {submitting ? (
                 <>
@@ -608,7 +608,7 @@ function FortuneWheel({ onWin, spinsUsed }) {
   const wheelBtnRef = useRef(null);
   const confettiBurst = useConfetti();
 
-  const size = 320;
+  const size = 440;
   const cx = size / 2;
   const cy = size / 2;
   const r = size / 2 - 10;
@@ -646,22 +646,24 @@ function FortuneWheel({ onWin, spinsUsed }) {
         The Fortune Wheel <span style={{ color: TOKENS.gold }}>· 08 Orbits</span>
       </div>
 
-      <div className="relative" style={{ width: size, height: size }}>
-        <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: -14 }}>
-          <div style={{ width: 0, height: 0, borderLeft: "10px solid transparent", borderRight: "10px solid transparent", borderTop: `18px solid ${TOKENS.gold}`, filter: "drop-shadow(0 0 6px rgba(232,184,102,0.7))" }} />
+      <div className="relative flex justify-center items-center" style={{ width: 'min(100%, 45vh, 440px)', height: 'min(100%, 45vh, 440px)', margin: '0 auto' }}>
+        <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: "-3%" }}>
+          <div style={{ width: 0, height: 0, borderLeft: "clamp(6px, 1.5vw, 10px) solid transparent", borderRight: "clamp(6px, 1.5vw, 10px) solid transparent", borderTop: `clamp(12px, 3vw, 18px) solid ${TOKENS.gold}`, filter: "drop-shadow(0 0 6px rgba(232,184,102,0.7))" }} />
         </div>
 
         <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle, rgba(139,123,255,0.2) 0%, transparent 70%)", animation: spinning ? "softPulse 0.8s infinite alternate" : "softPulse 4s infinite alternate", transform: "scale(1.2)", zIndex: -1 }}></div>
         
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="wheel-transition" style={{ transform: `rotate(${rotation}deg)`, filter: "drop-shadow(0 0 22px rgba(232,184,102,0.22))" }}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="wheel-transition" style={{ transform: `rotate(${rotation}deg)`, filter: "drop-shadow(0 0 22px rgba(232,184,102,0.22))" }}>
           <defs>
             <radialGradient id="segmentShadow" cx="50%" cy="50%" r="50%">
               <stop offset="50%" stopColor="#ffffff" stopOpacity="0" />
               <stop offset="100%" stopColor="#000000" stopOpacity="0.45" />
+              <animateTransform attributeName="gradientTransform" type="rotate" from="0 0.5 0.5" to="360 0.5 0.5" dur="15s" repeatCount="indefinite"/>
             </radialGradient>
             <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
               <stop offset="85%" stopColor={TOKENS.goldSoft} />
               <stop offset="100%" stopColor={TOKENS.copper} />
+              <animateTransform attributeName="gradientTransform" type="rotate" from="360 0.5 0.5" to="0 0.5 0.5" dur="10s" repeatCount="indefinite"/>
             </radialGradient>
           </defs>
           <circle cx={cx} cy={cy} r={r + 6} fill="none" stroke="url(#ringGlow)" strokeWidth="4" opacity="0.95" />
@@ -792,7 +794,7 @@ function ChatInterface({ unlocked, target, userDetails }) {
   };
 
   return (
-    <div className="relative card card-blur rounded-3xl overflow-hidden flex flex-col h-[500px] anim-fade-up" style={{ animationDelay: ".15s" }}>
+    <div className="relative card card-blur rounded-3xl overflow-hidden flex flex-col anim-fade-up" style={{ height: "min(500px, 60vh)" }}>
       <div className="flex items-center gap-3 px-5 py-4 border-b shrink-0" style={{ borderColor: TOKENS.line }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(139,123,255,0.12)", border: `1px solid ${TOKENS.violet}55` }}>
           <Moon className="w-4 h-4" style={{ color: TOKENS.violet }} />
