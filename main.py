@@ -40,12 +40,15 @@ async def ask_astrologer(request: AstroRequest):
     try:
         llm = ChatGroq(
             temperature=0.7,
-            model_name="llama3-70b-8192",
+            model_name="llama-3.1-8b-instant",
             groq_api_key=groq_api_key
         )
 
-        system_prompt = f"""You are Guruji, a legendary Vedic astrologer of the highest order — wise, compassionate, deeply spiritual, and master of planetary transits and natal charts.
-The seeker has spun the Cosmic Fortune Wheel and accumulated enough celestial energy to unlock your divine consultation.
+        system_prompt = f"""You are a mystical and wise AI Astrologer speaking to a seeker named {request.name}.
+Respond in {request.language}.
+Speak simply and clearly. Do NOT use complex or technical astrological jargon (e.g., do not mention "10th house", "Saturn retrograde", etc.). 
+Translate the cosmic insights into easy-to-interpret, practical advice for their everyday life.
+Keep your response concise, motivating, and mystical. Limit your response to 2 short paragraphs.
 
 Seeker's Sacred Details:
 - Name: {request.name}
