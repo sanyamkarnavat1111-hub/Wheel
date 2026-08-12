@@ -743,7 +743,6 @@ function UserDetailsModal({ onSubmit }) {
   const [dob, setDob] = useState("");
   const [place, setPlace] = useState("");
   const [time, setTime] = useState("");
-  const [ampm, setAmpm] = useState("AM");
   const [errors, setErrors] = useState({});
   const [shakeKey, setShakeKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -778,7 +777,7 @@ function UserDetailsModal({ onSubmit }) {
     }
     setSubmitting(true);
     window.setTimeout(() => {
-      onSubmit({ name: name.trim(), dob: dob.trim(), place: place.trim(), time, ampm: ampm || "AM" });
+      onSubmit({ name: name.trim(), dob: dob.trim(), place: place.trim(), time });
     }, 420);
   };
 
@@ -960,14 +959,6 @@ function UserDetailsModal({ onSubmit }) {
                       className="w-full bg-transparent text-sm"
                     />
                   </div>
-                  <select
-                    value={ampm}
-                    onChange={(e) => setAmpm(e.target.value)}
-                    className="input-glow rounded-xl px-3 py-3 bg-black/30 border border-white/10 text-sm"
-                  >
-                    <option>AM</option>
-                    <option>PM</option>
-                  </select>
                 </div>
               </label>
 
@@ -1047,7 +1038,7 @@ function Header({ points, target }) {
             >
               <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
             </div>
-            <span className="font-display text-base sm:text-lg font-semibold tracking-tight truncate">
+            <span className="font-display text-base sm:text-lg font-semibold tracking-tight whitespace-nowrap">
               Astro<span className="text-gold">Wheel</span>
             </span>
           </div>
