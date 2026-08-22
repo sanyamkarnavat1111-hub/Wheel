@@ -37,7 +37,7 @@ export const TRANSLATIONS = {
     heroDesc: "Gather cosmic energy and seek guidance from your personal AI Astrologer.",
     chatTitle: "AI Astrologer",
     chatSubtitle: "Your Trusted Astrologer",
-    chatGreeting: "{name}. Your energy has reached {target}. Ask your question.",
+    chatGreeting: "{name}. Your energy is at {points}. You have {tickets} question ticket(s) available. Ask your question.",
     chatInput: "Ask about your path...",
     chatLocked: "Channel locked",
     chatSend: "Send",
@@ -73,7 +73,7 @@ export const TRANSLATIONS = {
     heroDesc: "ब्रह्मांडीय ऊर्जा एकत्र करें और अपने व्यक्तिगत AI ज्योतिषी से मार्गदर्शन लें।",
     chatTitle: "AI ज्योतिषी",
     chatSubtitle: "आपका विश्वसनीय ज्योतिषी",
-    chatGreeting: "नमस्ते {name}। आपकी ऊर्जा {target} तक पहुँच गई है। अपना प्रश्न पूछें।",
+    chatGreeting: "नमस्ते {name}। आपकी ऊर्जा {points} है। आपके पास {tickets} प्रश्न टिकट उपलब्ध हैं। अपना प्रश्न पूछें।",
     chatInput: "अपने मार्ग के बारे में पूछें...",
     chatLocked: "चैनल बंद है",
     chatSend: "भेजें",
@@ -109,7 +109,7 @@ export const TRANSLATIONS = {
     heroDesc: "वैश्विक ऊर्जा गोळा करा आणि तुमच्या वैयक्तिक AI ज्योतिषाकडून मार्गदर्शन मिळवा.",
     chatTitle: "AI ज्योतिषी",
     chatSubtitle: "तुमचा विश्वासू ज्योतिषी",
-    chatGreeting: "नमस्कार {name}. तुमची ऊर्जा {target} वर पोहोचली आहे. तुमचा प्रश्न विचारा.",
+    chatGreeting: "नमस्कार {name}. तुमची ऊर्जा {points} आहे. तुमच्याकडे {tickets} प्रश्न तिकीट उपलब्ध आहेत. तुमचा प्रश्न विचारा.",
     chatInput: "तुमच्या भविष्याबद्दल विचारा...",
     chatLocked: "चॅनेल बंद आहे",
     chatSend: "पाठवा",
@@ -145,7 +145,7 @@ export const TRANSLATIONS = {
     heroDesc: "બ્રહ્માંડીય ઊર્જા એકત્રિત કરો અને તમારા વ્યક્તિગત AI જ્યોતિષી પાસેથી માર્ગદર્શન મેળવો.",
     chatTitle: "AI જ્યોતિષી",
     chatSubtitle: "તમારો વિશ્વસનીય જ્યોતિષી",
-    chatGreeting: "નમસ્તે {name}. તમારી ઊર્જા {target} પર પહોંચી છે. તમારો પ્રશ્ન પૂછો.",
+    chatGreeting: "નમસ્તે {name}. તમારી ઊર્જા {points} છે. તમારી પાસે {tickets} પ્રશ્ન ટિકિટ ઉપલબ્ધ છે. તમારો પ્રશ્ન પૂછો.",
     chatInput: "તમારા ભવિષ્ય વિશે પૂછો...",
     chatLocked: "ચેનલ બંધ છે",
     chatSend: "મોકલો",
@@ -175,3 +175,14 @@ export const SEGMENTS = [
 
 export const SEGMENT_ANGLE = 360 / SEGMENTS.length;
 
+export const SYSTEM_PROMPT = `You are a mystical and wise AI Astrologer. You speak in a cosmic, insightful, and slightly mysterious tone. 
+Keep your answers brief (max 3 sentences). Provide an insightful and personalized astrology reading based on the user's details.
+
+User Details:
+- Name: {name}
+- Date of Birth: {dob}
+- Place of Birth: {place}
+- Time of Birth: {time}
+- Preferred Language: {language}
+
+Please respond in the user's preferred language. Address the user's specific question using their astrological details if relevant.`;

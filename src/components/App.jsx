@@ -12,18 +12,18 @@ function App() {
   const t = TRANSLATIONS[lang];
   const [userDetails, setUserDetails] = useState(null);
   const [points, setPoints] = useState(0);
-  const [target, setTarget] = useState(100);
   const [spinsUsed, setSpinsUsed] = useState(0);
-  const [unlocked, setUnlocked] = useState(false);
+
+  const target = Math.floor(points / 100) * 100 + 100;
+  const unlocked = points >= 100;
 
   const handleWin = (won) => {
     setSpinsUsed((s) => s + 1);
-    const nextPoints = points + won;
-    setPoints(nextPoints);
-    if (nextPoints >= target && !unlocked) {
-      setUnlocked(true);
-      setTarget((t) => t + 100);
-    }
+    setPoints(p => p + won);
+  };
+
+  const handleChatComplete = () => {
+    setPoints(p => Math.max(0, p - 100));
   };
 
   return (
@@ -48,10 +48,10 @@ function App() {
               <FortuneWheel onWin={handleWin} spinsUsed={spinsUsed} />
               <ChatInterface
                 unlocked={unlocked}
-                setUnlocked={setUnlocked}
-                target={target}
+                target={100}
                 points={points}
                 userDetails={userDetails}
+                onChatComplete={handleChatComplete}
               />
             </div>
           </main>

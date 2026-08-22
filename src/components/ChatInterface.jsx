@@ -1,30 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TOKENS, LanguageContext, TRANSLATIONS } from '../config/constants.js';
-import { Moon, Sparkles, Lock, ArrowUp } from 'lucide-react';
-function ChatInterface({ unlocked, setUnlocked, target, points, userDetails }) {
+import { TOKENS, LanguageContext, TRANSLATIONS, SYSTEM_PROMPT } from '../config/constants.js';
+import { Moon, Sparkles, Lock, ArrowUp, ArrowRight } from 'lucide-react';
+function ChatInterface({ unlocked, setUnlocked, target, points, userDetails, onChatComplete }) {
   const { lang, t } = React.useContext(LanguageContext);
   const userName = userDetails?.name?.split(" ")[0];
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isAnswered, setIsAnswered] = useState(false);
   const [justUnlocked, setJustUnlocked] = useState(false);
   const scrollRef = useRef(null);
   const prevUnlocked = useRef(false);
 
   useEffect(() => {
-    if (unlocked && !prevUnlocked.current) {
+    if (unlocked && messages.length === 0) {
       setJustUnlocked(true);
       window.setTimeout(() => setJustUnlocked(false), 1600);
-      setMessages((m) => [
-        ...m,
+      setMessages([
         {
           role: "ai",
-          text: `${t.chatGreeting.replace("{name}", userName || "").replace("{target}", target)}`,
+          text: `${t.chatGreeting
+            .replace("{name}", userName || "")
+            .replace("{points}", points)
+            .replace("{tickets}", Math.floor(points / 100))}`,
         },
       ]);
     }
-    prevUnlocked.current = unlocked;
-  }, [unlocked, target, userName, t]);
+  }, [unlocked, target, userName, t, messages.length]);
 
   useEffect(() => {
     if (loading && scrollRef.current) {
@@ -34,37 +36,64 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails }) {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!input.trim() || loading || !unlocked) return;
+    if (!input.trim() || loading || !unlocked || isAnswered) return;
+    
     const userQuestion = input.trim();
     setMessages((m) => [...m, { role: "user", text: userQuestion }]);
     setInput("");
     setLoading(true);
-    setUnlocked(false);
 
     try {
-      const res = await fetch("/api/astro/ask", {
+      const prompt = SYSTEM_PROMPT
+        .replace("{name}", userDetails?.name || "Seeker")
+        .replace("{dob}", userDetails?.dob || "Unknown")
+        .replace("{time}", userDetails?.time || "Unknown")
+        .replace("{place}", userDetails?.place || "Unknown")
+        .replace("{language}", TRANSLATIONS[lang].langName);
+
+      const apiKey = import.meta.env.PUBLIC_OPENROUTER_API_KEY;
+      if (!apiKey) {
+        throw new Error("API Key missing");
+      }
+
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
-          name: userDetails?.name || "Seeker",
-          dob: userDetails?.dob || "Unknown",
-          time: userDetails?.time || "Unknown",
-          place: userDetails?.place || "Unknown",
-          language: TRANSLATIONS[lang].langName,
-          question: userQuestion,
-        }),
+          model: "nvidia/nemotron-3.5-lightning:free",
+          messages: [
+            { role: "system", content: prompt },
+            { role: "user", content: userQuestion }
+          ]
+        })
       });
+      
       if (!res.ok) throw new Error("API Error");
       const data = await res.json();
-      setMessages((m) => [...m, { role: "ai", text: data.reading }]);
+      const reply = data.choices[0]?.message?.content || t.chatError;
+      setMessages((m) => [...m, { role: "ai", text: reply }]);
+      setIsAnswered(true);
     } catch (err) {
+      console.error(err);
       setMessages((m) => [...m, { role: "ai", text: t.chatError }]);
+      setIsAnswered(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const remaining = Math.max(0, target - (points || 0));
+  const handleContinue = () => {
+    setMessages([]);
+    setIsAnswered(false);
+    if (onChatComplete) {
+      onChatComplete();
+    }
+  };
+
+  const remaining = Math.max(0, 100 - (points % 100));
 
   return (
     <div
@@ -196,6 +225,20 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails }) {
             {t.lockMsg2.replace("{remaining}", remaining)}
           </span>
         </div>
+      ) : isAnswered ? (
+        <div className="p-3.5 sm:p-4 border-t shrink-0 flex justify-end" style={{ borderColor: TOKENS.line }}>
+          <button
+            onClick={handleContinue}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-transform active:scale-95 hover:brightness-110"
+            style={{
+              background: `linear-gradient(135deg, ${TOKENS.gold}, ${TOKENS.copper})`,
+              color: "#0b0a12",
+              boxShadow: "0 0 14px rgba(232,184,102,0.35)",
+            }}
+          >
+            Continue <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       ) : (
         <form
           onSubmit={handleSend}
@@ -267,7 +310,7 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails }) {
             <div
               className="h-full rounded-full transition-all duration-700"
               style={{
-                width: `${Math.min(100, ((points || 0) / target) * 100)}%`,
+                width: `${Math.min(100, ((points % 100) / 100) * 100)}%`,
                 background: `linear-gradient(90deg, ${TOKENS.copper}, ${TOKENS.gold})`,
               }}
             />
