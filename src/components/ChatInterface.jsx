@@ -8,6 +8,7 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails, onC
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [isError, setIsError] = useState(false);
   const [justUnlocked, setJustUnlocked] = useState(false);
   const scrollRef = useRef(null);
   const prevUnlocked = useRef(false);
@@ -34,14 +35,9 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails, onC
     }
   }, [loading, messages]);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || loading || !unlocked || isAnswered) return;
-    
-    const userQuestion = input.trim();
-    setMessages((m) => [...m, { role: "user", text: userQuestion }]);
-    setInput("");
+  const executeApiCall = async (userQuestion) => {
     setLoading(true);
+    setIsError(false);
 
     try {
       const prompt = SYSTEM_PROMPT
@@ -56,32 +52,76 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails, onC
         throw new Error("API Key missing");
       }
 
-      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "google/gemma-4-31b-it:free",
-          messages: [
-            { role: "system", content: prompt },
-            { role: "user", content: userQuestion }
-          ]
-        })
-      });
-      
-      if (!res.ok) throw new Error("API Error");
-      const data = await res.json();
-      const reply = data.choices[0]?.message?.content || t.chatError;
-      setMessages((m) => [...m, { role: "ai", text: reply }]);
-      setIsAnswered(true);
+      let success = false;
+      let reply = "";
+
+      for (let i = 0; i < 3; i++) {
+        try {
+          const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${apiKey}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              model: "google/gemma-4-31b-it:free",
+              messages: [
+                { role: "system", content: prompt },
+                { role: "user", content: userQuestion }
+              ]
+            })
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            reply = data.choices[0]?.message?.content || t.chatError;
+            success = true;
+            break;
+          } else if (res.status === 429 || res.status === 502) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          } else {
+            break;
+          }
+        } catch (fetchErr) {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+      }
+
+      if (success) {
+        setMessages((m) => [...m, { role: "ai", text: reply }]);
+        setIsAnswered(true);
+      } else {
+        throw new Error("API Request Failed");
+      }
     } catch (err) {
       console.error(err);
       setMessages((m) => [...m, { role: "ai", text: t.chatError }]);
-      setIsAnswered(true);
+      setIsError(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || loading || !unlocked || isAnswered || isError) return;
+    
+    const userQuestion = input.trim();
+    setMessages((m) => [...m, { role: "user", text: userQuestion }]);
+    setInput("");
+    
+    await executeApiCall(userQuestion);
+  };
+
+  const handleTryAgain = () => {
+    const prevMsgs = [...messages];
+    prevMsgs.pop();
+    setMessages(prevMsgs);
+    setIsError(false);
+    
+    const userQuestion = prevMsgs[prevMsgs.length - 1]?.text;
+    if (userQuestion) {
+      executeApiCall(userQuestion);
     }
   };
 
@@ -224,6 +264,20 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails, onC
           <span className="text-xs" style={{ color: TOKENS.mist }}>
             {t.lockMsg2.replace("{remaining}", remaining)}
           </span>
+        </div>
+      ) : isError ? (
+        <div className="p-3.5 sm:p-4 border-t shrink-0 flex justify-end" style={{ borderColor: TOKENS.line }}>
+          <button
+            onClick={handleTryAgain}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-transform active:scale-95 hover:brightness-110"
+            style={{
+              background: `linear-gradient(135deg, ${TOKENS.violet}, ${TOKENS.violetDim})`,
+              color: "white",
+              boxShadow: "0 0 14px rgba(139,123,255,0.35)",
+            }}
+          >
+            Try Again <ArrowUp className="w-4 h-4" />
+          </button>
         </div>
       ) : isAnswered ? (
         <div className="p-3.5 sm:p-4 border-t shrink-0 flex justify-end" style={{ borderColor: TOKENS.line }}>
