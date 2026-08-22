@@ -63,7 +63,7 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails, onC
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "nvidia/nemotron-3.5-lightning:free",
+          model: "google/gemma-4-31b-it:free",
           messages: [
             { role: "system", content: prompt },
             { role: "user", content: userQuestion }
