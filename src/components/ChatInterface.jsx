@@ -45,45 +45,88 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails, onC
         .replace("{dob}", userDetails?.dob || "Unknown")
         .replace("{time}", userDetails?.time || "Unknown")
         .replace("{place}", userDetails?.place || "Unknown")
-        .replace("{language}", TRANSLATIONS[lang].langName);
+        .replace("{language}", TRANSLATIONS[lang].langName)
+        .replace("{current_time}", new Date().toLocaleString());
 
-      const apiKey = import.meta.env.PUBLIC_OPENROUTER_API_KEY;
-      if (!apiKey) {
-        throw new Error("API Key missing");
+      const groqKey = import.meta.env.PUBLIC_GROQ_API_KEY;
+      const geminiKey = import.meta.env.PUBLIC_GEMINI_API_KEY;
+      
+      if (!groqKey && !geminiKey) {
+        throw new Error("API Keys missing");
       }
 
       let success = false;
       let reply = "";
 
-      for (let i = 0; i < 3; i++) {
-        try {
-          const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${apiKey}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              model: "google/gemma-4-31b-it:free",
-              messages: [
-                { role: "system", content: prompt },
-                { role: "user", content: userQuestion }
-              ]
-            })
-          });
-          
-          if (res.ok) {
-            const data = await res.json();
-            reply = data.choices[0]?.message?.content || t.chatError;
-            success = true;
-            break;
-          } else if (res.status === 429 || res.status === 502) {
+      // Primary: Groq API
+      if (groqKey) {
+        for (let i = 0; i < 3; i++) {
+          try {
+            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${groqKey}`,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                model: "qwen/qwen3.6-27b",
+                messages: [
+                  { role: "system", content: prompt },
+                  { role: "user", content: userQuestion }
+                ]
+              })
+            });
+            
+            if (res.ok) {
+              const data = await res.json();
+              let rawReply = data.choices[0]?.message?.content || t.chatError;
+              reply = rawReply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+              success = true;
+              break;
+            } else if (res.status === 429 || res.status === 502 || res.status === 503) {
+              await new Promise(resolve => setTimeout(resolve, 1500));
+            } else {
+              break; // 401, 404, etc. Break to fallback
+            }
+          } catch (fetchErr) {
             await new Promise(resolve => setTimeout(resolve, 1500));
-          } else {
-            break;
           }
-        } catch (fetchErr) {
-          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+      }
+
+      // Fallback: Gemini API
+      if (!success && geminiKey) {
+        for (let i = 0; i < 3; i++) {
+          try {
+            const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${geminiKey}`,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                model: "gemini-3.5-flash",
+                messages: [
+                  { role: "system", content: prompt },
+                  { role: "user", content: userQuestion }
+                ]
+              })
+            });
+            
+            if (res.ok) {
+              const data = await res.json();
+              let rawReply = data.choices[0]?.message?.content || t.chatError;
+              reply = rawReply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+              success = true;
+              break;
+            } else if (res.status === 429 || res.status === 502 || res.status === 503) {
+              await new Promise(resolve => setTimeout(resolve, 1500));
+            } else {
+              break;
+            }
+          } catch (fetchErr) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          }
         }
       }
 

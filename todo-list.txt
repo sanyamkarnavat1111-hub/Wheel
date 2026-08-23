@@ -1,9 +1,6 @@
--- The entire website is shifted to astro js , modify the LLM workflow to not store 
-chat history and only answer the question of the user once and erases the conversation
-history , in that way we can shift the entire website to frontend only , which will call 
-API only and does not need backend to handle conversation history.
-
 
 -- Link the domain name that you have bought 
 -- Link the google analytics to track the active users and all.
 -- Do SEO .
+
+
