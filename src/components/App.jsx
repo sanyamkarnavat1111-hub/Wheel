@@ -6,6 +6,8 @@ import Header from './Header.jsx';
 import Hero from './Hero.jsx';
 import FortuneWheel from './FortuneWheel.jsx';
 import ChatInterface from './ChatInterface.jsx';
+import Footer from './Footer.jsx';
+import SeoContent from './SeoContent.jsx';
 
 function App() {
   const [lang, setLang] = useState("en");
@@ -55,6 +57,9 @@ function App() {
               />
             </div>
           </main>
+          
+          <SeoContent />
+          <Footer />
         </div>
       </div>
     </LanguageContext.Provider>
