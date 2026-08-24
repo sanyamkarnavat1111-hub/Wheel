@@ -3,7 +3,7 @@ import { TOKENS, LanguageContext, SEGMENTS } from '../config/constants.js';
 import { arcPath, polarToCartesian, pickWeightedSegment } from '../utils/math.js';
 import useConfetti from './useConfetti.js';
 import { Star, Sparkles } from 'lucide-react';
-import AdModal from './AdModal.js';
+import AdModal from './AdModal';
 
 const SEGMENT_ANGLE = 360 / SEGMENTS.length;
 
