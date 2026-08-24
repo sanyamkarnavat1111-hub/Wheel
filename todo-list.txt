@@ -1,6 +1,4 @@
 
--- Link the domain name that you have bought 
--- Link the google analytics to track the active users and all.
 -- Do SEO .
 
 
