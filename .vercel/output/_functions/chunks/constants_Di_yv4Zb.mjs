@@ -1,0 +1,183 @@
+import React from "react";
+//#region src/config/constants.js
+var TOKENS = {
+	void: "#07070b",
+	panel: "#0d0d16",
+	card: "#111119",
+	violet: "#8b7bff",
+	violetDim: "#4c3a8a",
+	copper: "#cf9a67",
+	gold: "#e8b866",
+	goldSoft: "#f3d9a4",
+	mist: "#7d7c8e",
+	line: "rgba(255,255,255,0.08)",
+	success: "#4ade80"
+};
+var TRANSLATIONS = {
+	en: {
+		langName: "English",
+		intakeTitle: "Celestial Intake",
+		intakeHeading: "Chart your path.",
+		intakeDesc: "Four details, and the stars will begin aligning your reading.",
+		fullName: "Full Name",
+		dateOfBirth: "Date of Birth",
+		placeOfBirth: "Place of Birth",
+		timeOfBirth: "Time of Birth",
+		namePlaceholder: "e.g. Aria Nightingale",
+		placePlaceholder: "e.g. Pune, India",
+		fillAll: "Fill in every field so the stars have something to work with.",
+		revealPath: "Reveal My Path",
+		aligning: "Aligning the stars...",
+		wheelTitle: "The Fortune Wheel",
+		wheelOrbits: "08 Orbits",
+		spinBtn: "SPIN",
+		spinning: "SPINNING",
+		heroPlayground: "Unlock Your Kundli Secrets",
+		heroTitle1: "Spin the wheel of destiny.",
+		heroTitle2: "Connect with your path.",
+		heroDesc: "Gather cosmic energy and seek guidance from your personal AI Astrologer.",
+		chatTitle: "AI Astrologer",
+		chatSubtitle: "Your Trusted Astrologer",
+		chatGreeting: "{name}. Your energy is at {points}. You have {tickets} question ticket(s) available. Ask your question.",
+		chatInput: "Ask about your path...",
+		chatLocked: "Channel locked",
+		chatSend: "Send",
+		chatError: "The cosmic connection was interrupted. Please try again.",
+		energy: "Points",
+		channelMsg1: "You channeled ",
+		channelMsg2: " energy",
+		channelFail: "The stars stayed silent. Try again.",
+		lockMsg1: "Your private channel to the cosmos will appear here.",
+		lockMsg2: "{remaining} points more before you can ask your question, keep spinning!"
+	},
+	hi: {
+		langName: "हिंदी",
+		intakeTitle: "कुंडली विवरण",
+		intakeHeading: "अपना मार्ग चुनें।",
+		intakeDesc: "तीन विवरण, और सितारे आपके भविष्य को संरेखित करना शुरू कर देंगे।",
+		fullName: "पूरा नाम",
+		dateOfBirth: "जन्म तिथि",
+		placeOfBirth: "जन्म स्थान",
+		timeOfBirth: "जन्म का समय",
+		namePlaceholder: "उदा. आरिया नाइटिंगेल",
+		placePlaceholder: "उदा. पुणे, भारत",
+		fillAll: "कृपया सभी फ़ील्ड भरें।",
+		revealPath: "मेरा मार्ग दिखाएं",
+		aligning: "सितारों को संरेखित कर रहे हैं...",
+		wheelTitle: "भाग्य चक्र",
+		wheelOrbits: "08 कक्ष",
+		spinBtn: "घुमाएं",
+		spinning: "घूम रहा है",
+		heroPlayground: "अपनी कुंडली के रहस्य खोलें",
+		heroTitle1: "नियति का चक्र घुमाएं।",
+		heroTitle2: "अपने मार्ग से जुड़ें।",
+		heroDesc: "ब्रह्मांडीय ऊर्जा एकत्र करें और अपने व्यक्तिगत AI ज्योतिषी से मार्गदर्शन लें।",
+		chatTitle: "AI ज्योतिषी",
+		chatSubtitle: "आपका विश्वसनीय ज्योतिषी",
+		chatGreeting: "नमस्ते {name}। आपकी ऊर्जा {points} है। आपके पास {tickets} प्रश्न टिकट उपलब्ध हैं। अपना प्रश्न पूछें।",
+		chatInput: "अपने मार्ग के बारे में पूछें...",
+		chatLocked: "चैनल बंद है",
+		chatSend: "भेजें",
+		chatError: "ब्रह्मांडीय संपर्क टूट गया। कृपया पुनः प्रयास करें।",
+		energy: "अंक",
+		channelMsg1: "आपको ",
+		channelMsg2: " ऊर्जा प्राप्त हुई",
+		channelFail: "सितारे शांत रहे। पुनः प्रयास करें।",
+		lockMsg1: "ब्रह्मांड के साथ आपका निजी चैनल यहाँ दिखाई देगा।",
+		lockMsg2: "अपना प्रश्न पूछने से पहले {remaining} अधिक अंक, घुमाते रहें!"
+	},
+	mr: {
+		langName: "मराठी",
+		intakeTitle: "कुंडली तपशील",
+		intakeHeading: "तुमचा मार्ग निवडा.",
+		intakeDesc: "तीन तपशील, आणि तारे तुमचे भविष्य जुळवण्यास सुरुवात करतील.",
+		fullName: "पूर्ण नाव",
+		dateOfBirth: "जन्म तारीख",
+		placeOfBirth: "जन्म ठिकाण",
+		timeOfBirth: "जन्म वेळ",
+		namePlaceholder: "उदा. आरिया नाइटिंगेल",
+		placePlaceholder: "उदा. पुणे, भारत",
+		fillAll: "कृपया सर्व माहिती भरा.",
+		revealPath: "माझा मार्ग दाखवा",
+		aligning: "तारे जुळवत आहे...",
+		wheelTitle: "भाग्य चक्र",
+		wheelOrbits: "08 कक्षा",
+		spinBtn: "फिरवा",
+		spinning: "फिरत आहे",
+		heroPlayground: "तुमची कुंडली जाणून घ्या",
+		heroTitle1: "नियतीचे चक्र फिरवा.",
+		heroTitle2: "तुमच्या मार्गाशी जोडा.",
+		heroDesc: "वैश्विक ऊर्जा गोळा करा आणि तुमच्या वैयक्तिक AI ज्योतिषाकडून मार्गदर्शन मिळवा.",
+		chatTitle: "AI ज्योतिषी",
+		chatSubtitle: "तुमचा विश्वासू ज्योतिषी",
+		chatGreeting: "नमस्कार {name}. तुमची ऊर्जा {points} आहे. तुमच्याकडे {tickets} प्रश्न तिकीट उपलब्ध आहेत. तुमचा प्रश्न विचारा.",
+		chatInput: "तुमच्या भविष्याबद्दल विचारा...",
+		chatLocked: "चॅनेल बंद आहे",
+		chatSend: "पाठवा",
+		chatError: "संपर्क तुटला. कृपया पुन्हा प्रयत्न करा.",
+		energy: "गुण",
+		channelMsg1: "तुम्हाला ",
+		channelMsg2: " ऊर्जा मिळाली",
+		channelFail: "तारे शांत राहिले. पुन्हा प्रयत्न करा.",
+		lockMsg1: "ब्रह्मांडाशी तुमचे खाजगी चॅनेल येथे दिसेल.",
+		lockMsg2: "तुमचा प्रश्न विचारण्यापूर्वी {remaining} अधिक गुण, फिरवत राहा!"
+	},
+	gu: {
+		langName: "ગુજરાતી",
+		intakeTitle: "કુંડળી વિગતો",
+		intakeHeading: "તમારો માર્ગ પસંદ કરો.",
+		intakeDesc: "ત્રણ વિગતો, અને તારાઓ તમારું ભવિષ્ય ગોઠવવાનું શરૂ કરશે.",
+		fullName: "પૂરું નામ",
+		dateOfBirth: "જન્મ તારીખ",
+		placeOfBirth: "જન્મ સ્થળ",
+		timeOfBirth: "જન્મ સમય",
+		namePlaceholder: "દા.ત. આરિયા નાઇટિંગેલ",
+		placePlaceholder: "દા.ત. પુણે, ભારત",
+		fillAll: "કૃપા કરીને બધી માહિતી ભરો.",
+		revealPath: "મારો માર્ગ બતાવો",
+		aligning: "તારાઓ ગોઠવાઈ રહ્યા છે...",
+		wheelTitle: "ભાગ્ય ચક્ર",
+		wheelOrbits: "08 કક્ષા",
+		spinBtn: "ફેરવો",
+		spinning: "ફરી રહ્યું છે",
+		heroPlayground: "તમારી કુંડળી જાણો",
+		heroTitle1: "નિયતિનું ચક્ર ફેરવો.",
+		heroTitle2: "તમારા માર્ગ સાથે જોડાઓ.",
+		heroDesc: "બ્રહ્માંડીય ઊર્જા એકત્રિત કરો અને તમારા વ્યક્તિગત AI જ્યોતિષી પાસેથી માર્ગદર્શન મેળવો.",
+		chatTitle: "AI જ્યોતિષી",
+		chatSubtitle: "તમારો વિશ્વસનીય જ્યોતિષી",
+		chatGreeting: "નમસ્તે {name}. તમારી ઊર્જા {points} છે. તમારી પાસે {tickets} પ્રશ્ન ટિકિટ ઉપલબ્ધ છે. તમારો પ્રશ્ન પૂછો.",
+		chatInput: "તમારા ભવિષ્ય વિશે પૂછો...",
+		chatLocked: "ચેનલ બંધ છે",
+		chatSend: "મોકલો",
+		chatError: "સંપર્ક તૂટી ગયો. કૃપા કરીને ફરી પ્રયાસ કરો.",
+		energy: "પોઇન્ટ્સ",
+		channelMsg1: "તમને ",
+		channelMsg2: " ઊર્જા મળી",
+		channelFail: "તારાઓ શાંત રહ્યા. ફરી પ્રયાસ કરો.",
+		lockMsg1: "બ્રહ્માંડ સાથેની તમારી ખાનગી ચેનલ અહીં દેખાશે.",
+		lockMsg2: "તમારો પ્રશ્ન પૂછતા પહેલા {remaining} વધુ પોઇન્ટ્સ, ફેરવતા રહો!"
+	}
+};
+React.createContext();
+var SYSTEM_PROMPT = `You are a mystical and wise AI Astrologer. Keep your answers brief (max 3 sentences). Provide an insightful and personalized astrology reading based on the user's details.
+
+User Details:
+- Name: {name}
+- Date of Birth: {dob}
+- Place of Birth: {place}
+- Time of Birth: {time}
+- Preferred Interface Language: {language}
+
+Current Date and Time: {current_time}
+
+CRITICAL LANGUAGE AND SCRIPT RULES:
+1. You MUST reply in the EXACT SAME language AND script that the user types their question in.
+2. If the user types in Romanized script (e.g., Hinglish or English characters for Marathi like "Maazi job kewha lagel" or "Meri job kab lagegi"), you MUST reply in the same Romanized script (e.g., Hinglish/Romanized Marathi). Do NOT use Devanagari if they used English letters.
+3. If the user types in a native script (e.g., Devanagari Hindi or Gujarati script), you MUST reply in that native script.
+4. If their question is ambiguous or extremely short, default to their Preferred Interface Language: {language}.
+5. CRITICAL: If the user asks multiple questions in a single prompt, ONLY answer the VERY FIRST question they asked. Completely ignore all subsequent questions.
+
+Address the user's specific question using their astrological details if relevant.`;
+//#endregion
+export { TOKENS as n, TRANSLATIONS as r, SYSTEM_PROMPT as t };

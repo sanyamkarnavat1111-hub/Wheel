@@ -30,7 +30,7 @@ function App() {
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, t }}>
-      <div className="astrowheel-root min-h-screen w-full safe-bottom anim-page-enter">
+      <div className="astrowheel-root min-h-screen w-full safe-bottom">
         <SpaceBackground />
 
         {!userDetails && <UserDetailsModal onSubmit={setUserDetails} />}
@@ -38,8 +38,8 @@ function App() {
         <div
           className={
             userDetails
-              ? "transition-all duration-500"
-              : "pointer-events-none blur-[4px] select-none opacity-70 transition-all duration-500"
+              ? "transition-all duration-500 anim-page-enter"
+              : "pointer-events-none blur-[4px] select-none opacity-70 transition-all duration-500 anim-page-enter"
           }
         >
           <Header points={points} target={target} />

@@ -60,25 +60,25 @@ function UserDetailsModal({ onSubmit }) {
 
       <div
         key={shakeKey}
-        className={`glow-border relative w-full max-w-[420px] anim-glass-reveal ${shakeKey ? "anim-shake" : ""}`}
+        className={`glow-border relative w-full max-w-[380px] anim-glass-reveal ${shakeKey ? "anim-shake" : ""}`}
         style={{ boxShadow: "0 32px 90px rgba(0,0,0,0.7), 0 0 80px rgba(139,123,255,0.08)" }}
       >
         <div
-          className="relative rounded-[28px] overflow-hidden p-7 sm:p-9"
+          className="relative rounded-[28px] overflow-hidden p-6 sm:p-8"
           style={{
             background: `linear-gradient(165deg, ${TOKENS.card} 0%, #0a0a12 60%, #0c0a14 100%)`,
           }}
         >
           {/* Decorative floating orbs inside modal */}
           <div
-            className="absolute -top-6 -right-6 w-28 h-28 rounded-full pointer-events-none"
+            className="absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none"
             style={{
               background: "radial-gradient(circle, rgba(232,184,102,0.2), transparent 70%)",
               animation: "modalOrb 7s ease-in-out infinite",
             }}
           />
           <div
-            className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full pointer-events-none"
+            className="absolute -bottom-8 -left-8 w-28 h-28 rounded-full pointer-events-none"
             style={{
               background: "radial-gradient(circle, rgba(139,123,255,0.18), transparent 70%)",
               animation: "modalOrb 9s ease-in-out infinite reverse",
@@ -89,16 +89,16 @@ function UserDetailsModal({ onSubmit }) {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center"
                   style={{
                     background: "rgba(232,184,102,0.12)",
                     border: "1px solid rgba(232,184,102,0.3)",
                   }}
                 >
-                  <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
+                  <Sparkles className="w-3 h-3" style={{ color: TOKENS.gold }} />
                 </div>
                 <span
-                  className="font-mono text-[11px] uppercase tracking-[0.22em]"
+                  className="font-mono text-[10px] uppercase tracking-[0.22em]"
                   style={{ color: TOKENS.gold }}
                 >
                   {t.intakeTitle}
@@ -111,7 +111,7 @@ function UserDetailsModal({ onSubmit }) {
               </select>
             </div>
 
-            <h1 className="font-display text-[1.85rem] sm:text-[2.1rem] font-semibold leading-[1.15] tracking-tight">
+            <h1 className="font-display text-[1.6rem] sm:text-[1.85rem] font-semibold leading-[1.15] tracking-tight">
               {t.intakeHeading.split(" ")[0]}{" "}
               <span className="text-gradient-gold">
                 {t.intakeHeading.split(" ").slice(1).join(" ")}
