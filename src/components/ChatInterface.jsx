@@ -40,101 +40,29 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails, onC
     setIsError(false);
 
     try {
-      const prompt = SYSTEM_PROMPT
-        .replace("{name}", userDetails?.name || "Seeker")
-        .replace("{dob}", userDetails?.dob || "Unknown")
-        .replace("{time}", userDetails?.time || "Unknown")
-        .replace("{place}", userDetails?.place || "Unknown")
-        .replace("{language}", TRANSLATIONS[lang].langName)
-        .replace("{current_time}", new Date().toLocaleString());
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userQuestion,
+          userDetails,
+          lang
+        })
+      });
 
-      const groqKey = import.meta.env.PUBLIC_GROQ_API_KEY;
-      const geminiKey = import.meta.env.PUBLIC_GEMINI_API_KEY;
+      if (!res.ok) {
+        throw new Error("API Request Failed");
+      }
+
+      const data = await res.json();
       
-      if (!groqKey && !geminiKey) {
-        throw new Error("API Keys missing");
-      }
-
-      let success = false;
-      let reply = "";
-
-      // Primary: Groq API
-      if (groqKey) {
-        for (let i = 0; i < 3; i++) {
-          try {
-            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-              method: "POST",
-              headers: {
-                "Authorization": `Bearer ${groqKey}`,
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                model: "qwen/qwen3.6-27b",
-                messages: [
-                  { role: "system", content: prompt },
-                  { role: "user", content: userQuestion }
-                ]
-              })
-            });
-            
-            if (res.ok) {
-              const data = await res.json();
-              let rawReply = data.choices[0]?.message?.content || t.chatError;
-              reply = rawReply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-              success = true;
-              break;
-            } else if (res.status === 429 || res.status === 502 || res.status === 503) {
-              await new Promise(resolve => setTimeout(resolve, 1500));
-            } else {
-              break; // 401, 404, etc. Break to fallback
-            }
-          } catch (fetchErr) {
-            await new Promise(resolve => setTimeout(resolve, 1500));
-          }
-        }
-      }
-
-      // Fallback: Gemini API
-      if (!success && geminiKey) {
-        for (let i = 0; i < 3; i++) {
-          try {
-            const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-              method: "POST",
-              headers: {
-                "Authorization": `Bearer ${geminiKey}`,
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                model: "gemini-3.5-flash",
-                messages: [
-                  { role: "system", content: prompt },
-                  { role: "user", content: userQuestion }
-                ]
-              })
-            });
-            
-            if (res.ok) {
-              const data = await res.json();
-              let rawReply = data.choices[0]?.message?.content || t.chatError;
-              reply = rawReply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-              success = true;
-              break;
-            } else if (res.status === 429 || res.status === 502 || res.status === 503) {
-              await new Promise(resolve => setTimeout(resolve, 1500));
-            } else {
-              break;
-            }
-          } catch (fetchErr) {
-            await new Promise(resolve => setTimeout(resolve, 1500));
-          }
-        }
-      }
-
-      if (success) {
-        setMessages((m) => [...m, { role: "ai", text: reply }]);
+      if (data.reply) {
+        setMessages((m) => [...m, { role: "ai", text: data.reply }]);
         setIsAnswered(true);
       } else {
-        throw new Error("API Request Failed");
+        throw new Error("No reply found");
       }
     } catch (err) {
       console.error(err);
