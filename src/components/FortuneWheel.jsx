@@ -3,6 +3,7 @@ import { TOKENS, LanguageContext, SEGMENTS } from '../config/constants.js';
 import { arcPath, polarToCartesian, pickWeightedSegment } from '../utils/math.js';
 import useConfetti from './useConfetti.js';
 import { Star, Sparkles } from 'lucide-react';
+import AdModal from './AdModal.js';
 
 const SEGMENT_ANGLE = 360 / SEGMENTS.length;
 
@@ -15,13 +16,23 @@ function FortuneWheel({ onWin, spinsUsed }) {
   const wheelBtnRef = useRef(null);
   const confettiBurst = useConfetti();
 
+  const [showAd, setShowAd] = useState(false);
+
   const size = 440;
   const cx = size / 2;
   const cy = size / 2;
   const r = size / 2 - 10;
 
-  const handleSpin = () => {
+  // Intercept the spin click to show the ad first
+  const handleSpinClick = () => {
     if (spinning) return;
+    setShowAd(true);
+  };
+
+  // This is called automatically when the ad timer finishes
+  const executeSpin = () => {
+    setShowAd(false);
+    
     setPressAnim(true);
     window.setTimeout(() => setPressAnim(false), 280);
     setSpinning(true);
@@ -316,7 +327,7 @@ function FortuneWheel({ onWin, spinsUsed }) {
         {/* Center SPIN button */}
         <button
           ref={wheelBtnRef}
-          onClick={handleSpin}
+          onClick={handleSpinClick}
           disabled={spinning}
           aria-label={spinning ? t.spinning : t.spinBtn}
           className={`absolute top-1/2 left-1/2 rounded-full font-display font-bold text-[11px] sm:text-xs tracking-[0.2em] flex items-center justify-center z-20 ${
@@ -396,6 +407,8 @@ function FortuneWheel({ onWin, spinsUsed }) {
           </p>
         )}
       </div>
+
+      {showAd && <AdModal onComplete={executeSpin} />}
     </div>
   );
 }
