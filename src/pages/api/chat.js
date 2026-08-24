@@ -1,4 +1,4 @@
-import { SYSTEM_PROMPT, TRANSLATIONS } from '../../../config/constants.js';
+import { SYSTEM_PROMPT, TRANSLATIONS } from '../../config/constants.js';
 
 export const prerender = false;
 
