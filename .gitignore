@@ -2,6 +2,7 @@
 *.env
 *node_modules
 *dist
-*.vercel
 *.vscode
+*.astro
+*.vercel
 *.astro
