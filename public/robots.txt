@@ -1,6 +1,19 @@
+# AstroWheel - freeastrologer.online
+# Generated for Googlebot, Bingbot, and all well-behaved crawlers
+
 User-agent: *
 Allow: /
+
+# Block error pages and API routes from indexing
 Disallow: /404
 Disallow: /500
+Disallow: /api/
 
+# Block any query parameter variants to prevent duplicate content
+Disallow: /*?*
+
+# Crawl-delay for politeness (Googlebot ignores this, but others respect it)
+Crawl-delay: 1
+
+# Sitemap location — always crawled fresh by search engines
 Sitemap: https://freeastrologer.online/sitemap.xml

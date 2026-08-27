@@ -3,7 +3,22 @@ import Layout from '../layouts/Layout.astro';
 import Footer from '../components/Footer.jsx';
 ---
 
-<Layout title="Terms & Conditions | AstroWheel">
+<Layout title="Terms & Conditions | AstroWheel – Free AI Astrologer">
+  <head>
+    <meta name="description" content="Read AstroWheel's terms and conditions for using our free AI Vedic astrologer service. By spinning the wheel you agree to these guidelines." />
+    <link rel="canonical" href="https://freeastrologer.online/terms" />
+    <meta name="robots" content="noindex, follow" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://freeastrologer.online/"},
+        {"@type": "ListItem", "position": 2, "name": "Terms & Conditions", "item": "https://freeastrologer.online/terms"}
+      ]
+    }
+    </script>
+  </head>
   <div class="min-h-screen text-[#f0eef7] flex flex-col font-sans">
     <header class="w-full border-b border-white/10 py-4 bg-[#07070b]/80 backdrop-blur-md sticky top-0 z-50">
       <div class="max-w-4xl mx-auto px-6">

@@ -23,17 +23,25 @@ import App from '../components/App.jsx';
   <title>Free Astrologer Chat Online | AI Astrology Readings – AstroWheel</title>
   <meta name="description" content="Chat with a free AI astrologer online. Spin, earn points, and unlock a personalized free astrologer consultation instantly on AstroWheel.">
   
+  <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:title" content="Free Astrologer Chat Online | AI Astrology Readings – AstroWheel" />
   <meta property="og:description" content="Chat with a free AI astrologer online. Spin, earn points, and unlock a personalized free astrologer consultation instantly on AstroWheel." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://freeastrologer.online/" />
-  <meta property="og:image" content="https://freeastrologer.online/apple-touch-icon.png" />
+  <meta property="og:image" content="https://freeastrologer.online/og-banner.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="AstroWheel – AI Vedic Astrology Wheel" />
+  <meta property="og:locale" content="en_US" />
   <meta property="og:site_name" content="AstroWheel" />
   
+  <!-- Twitter / X Card -->
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@astrowheel" />
   <meta name="twitter:title" content="Free Astrologer Chat Online | AI Astrology Readings – AstroWheel" />
   <meta name="twitter:description" content="Chat with a free AI astrologer online. Spin, earn points, and unlock a personalized free astrologer consultation instantly on AstroWheel." />
-  <meta name="twitter:image" content="https://freeastrologer.online/apple-touch-icon.png" />
+  <meta name="twitter:image" content="https://freeastrologer.online/og-banner.jpg" />
+  <meta name="twitter:image:alt" content="AstroWheel – Spin the wheel and unlock your free AI astrology reading" />
   
   <link rel="canonical" href="https://freeastrologer.online/" />
 
@@ -42,6 +50,72 @@ import App from '../components/App.jsx';
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
 
+  <!-- Schema 1: WebApplication — tells Google this is an AI Astrology App -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "AstroWheel – Free AI Astrologer Chat",
+    "url": "https://freeastrologer.online/",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "All",
+    "description": "AstroWheel is a free AI-powered Vedic astrology chat app. Spin the wheel to earn cosmic points, then unlock a personalized AI astrologer chat. Fine-tuned on authentic Vedic Jyotish scriptures and ancient astrological datasets.",
+    "inLanguage": ["en", "hi", "mr", "gu"],
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "INR"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "Artificial Grrow",
+      "url": "https://freeastrologer.online/about"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "124",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "featureList": [
+      "Free AI astrologer chat without sign-up",
+      "Vedic Jyotish birth chart analysis",
+      "AI fine-tuned on ancient astrological datasets",
+      "Multi-language support: English, Hindi, Marathi, Gujarati",
+      "Interactive Fortune Wheel for cosmic energy",
+      "Personalized planetary house and nakshatra readings"
+    ]
+  }
+  </script>
+
+  <!-- Schema 2: Organization — establishes brand authority -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Artificial Grrow",
+    "alternateName": "AstroWheel",
+    "url": "https://freeastrologer.online/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://freeastrologer.online/android-chrome-512x512.png",
+      "width": 512,
+      "height": 512
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer support",
+      "email": "sanyam.karnavat5@gmail.com",
+      "availableLanguage": ["English", "Hindi", "Marathi", "Gujarati"]
+    },
+    "sameAs": [
+      "https://freeastrologer.online/"
+    ]
+  }
+  </script>
+
+  <!-- Schema 3: FAQPage — enables rich snippets in Google Search -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
