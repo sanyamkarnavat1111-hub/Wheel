@@ -25,7 +25,7 @@ function Header({ points, target }) {
           background: "linear-gradient(180deg, rgba(139,123,255,0.06) 0%, transparent 100%)",
         }}
       />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-7 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-9 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
         <div className="w-full sm:w-auto flex flex-wrap items-center justify-between sm:justify-start gap-3 sm:gap-4">
           <div className="flex items-center gap-2.5 shrink-0">
             <div
@@ -38,7 +38,7 @@ function Header({ points, target }) {
             >
               <Sparkles className="w-3.5 h-3.5" style={{ color: TOKENS.gold }} />
             </div>
-            <span className="font-display text-base sm:text-lg font-semibold tracking-tight whitespace-nowrap">
+            <span className="font-display text-sm sm:text-base font-semibold tracking-tight whitespace-nowrap">
               Astro<span className="text-gold">Wheel</span>
             </span>
           </div>

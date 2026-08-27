@@ -48,7 +48,13 @@ export async function POST({ request }) {
           if (res.ok) {
             const data = await res.json();
             let rawReply = data.choices[0]?.message?.content || "";
-            reply = rawReply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+            // Aggressively clean up think blocks, reasoning traces, prompt leaks, and markdown asterisks
+            reply = rawReply
+              .replace(/<think>[\s\S]*?<\/think>/gi, '')
+              .replace(/<think>[\s\S]*$/gi, '') // If open-ended think tag
+              .replace(/\*\*+/g, '') // Strip markdown bolding asterisks
+              .replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '') // Strip emojis
+              .trim();
             success = true;
             break;
           } else if (res.status === 429 || res.status === 502 || res.status === 503) {
@@ -84,7 +90,12 @@ export async function POST({ request }) {
           if (res.ok) {
             const data = await res.json();
             let rawReply = data.choices[0]?.message?.content || "";
-            reply = rawReply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+            reply = rawReply
+              .replace(/<think>[\s\S]*?<\/think>/gi, '')
+              .replace(/<think>[\s\S]*$/gi, '')
+              .replace(/\*\*+/g, '')
+              .replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '')
+              .trim();
             success = true;
             break;
           } else if (res.status === 429 || res.status === 502 || res.status === 503) {

@@ -26,7 +26,8 @@ function FortuneWheel({ onWin, spinsUsed }) {
   // Intercept the spin click to show the ad first
   const handleSpinClick = () => {
     if (spinning) return;
-    setShowAd(true);
+    // setShowAd(true); // Temporarily disabled while AdSense is under review
+    executeSpin();
   };
 
   // This is called automatically when the ad timer finishes
@@ -62,13 +63,13 @@ function FortuneWheel({ onWin, spinsUsed }) {
 
   return (
     <div
-      className={`card-wheel card-blur rounded-3xl p-5 sm:p-7 lg:p-8 flex flex-col items-center anim-fade-up ${
+      className={`card-wheel card-blur rounded-3xl p-4 sm:p-5 lg:p-6 flex flex-col items-center anim-fade-up ${
         lastWin !== null && lastWin > 0 ? "anim-win-flash" : ""
       }`}
       style={{ animationDelay: ".08s" }}
     >
       {/* Title row */}
-      <div className="self-start w-full mb-4 sm:mb-6 flex items-center justify-between gap-3">
+      <div className="self-start w-full mb-3 sm:mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -109,7 +110,7 @@ function FortuneWheel({ onWin, spinsUsed }) {
       <div
         className="relative flex justify-center items-center mx-auto"
         style={{
-          width: "min(100%, 44vh, 420px)",
+          width: "min(100%, 39vh, 380px)",
           aspectRatio: "1 / 1",
           maxWidth: "100%",
         }}

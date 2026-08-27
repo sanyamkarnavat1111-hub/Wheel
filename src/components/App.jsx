@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LanguageContext, TRANSLATIONS } from '../config/constants.js';
 import SpaceBackground from './SpaceBackground.jsx';
 import UserDetailsModal from './UserDetailsModal.jsx';
+import AnnouncementBar from './AnnouncementBar.jsx';
 import Header from './Header.jsx';
 import Hero from './Hero.jsx';
 import FortuneWheel from './FortuneWheel.jsx';
@@ -42,10 +43,11 @@ function App() {
               : "pointer-events-none blur-[4px] select-none opacity-70 transition-all duration-500 anim-page-enter"
           }
         >
+          <AnnouncementBar />
           <Header points={points} target={target} />
           <Hero />
 
-          <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16">
+          <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-start">
               <FortuneWheel onWin={handleWin} spinsUsed={spinsUsed} />
               <ChatInterface

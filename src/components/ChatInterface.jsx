@@ -14,20 +14,28 @@ function ChatInterface({ unlocked, setUnlocked, target, points, userDetails, onC
   const prevUnlocked = useRef(false);
 
   useEffect(() => {
-    if (unlocked && messages.length === 0) {
+    if (unlocked && !prevUnlocked.current) {
       setJustUnlocked(true);
       window.setTimeout(() => setJustUnlocked(false), 1600);
-      setMessages([
-        {
-          role: "ai",
-          text: `${t.chatGreeting
-            .replace("{name}", userName || "")
-            .replace("{points}", points)
-            .replace("{tickets}", Math.floor(points / 100))}`,
-        },
-      ]);
     }
-  }, [unlocked, target, userName, t, messages.length]);
+    prevUnlocked.current = unlocked;
+  }, [unlocked]);
+
+  useEffect(() => {
+    if (unlocked) {
+      const greetingText = t.chatGreeting
+        .replace("{name}", userName || "")
+        .replace("{points}", points)
+        .replace("{tickets}", Math.max(1, Math.floor(points / 100)));
+
+      setMessages(prev => {
+        if (prev.length <= 1) {
+          return [{ role: "ai", text: greetingText }];
+        }
+        return prev;
+      });
+    }
+  }, [unlocked, userName, t, points]);
 
   useEffect(() => {
     if (loading && scrollRef.current) {
